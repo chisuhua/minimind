@@ -4,3 +4,9 @@ __pycache__/
 out
 website/
 docs-minimind/
+
+# Sisyphus / oh-my-opencode internal state (session continuation, plans, notepads)
+.omo/
+
+# Local model weights (134M+ per model, should be hosted on HuggingFace/ModelScope)
+minimind-3/

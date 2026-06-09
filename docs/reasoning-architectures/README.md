@@ -56,7 +56,7 @@
 
 ## 📚 关联文档
 
-- [`../PRM_RESEARCH_REPORT.md`](../../PRM_RESEARCH_REPORT.md) - PRM 路线深度调研（v2 时做的）
+- [`../PRM_RESEARCH_REPORT.md`](../PRM_RESEARCH_REPORT.md) - PRM 路线深度调研（v2 时做的）
 - [`../reasoning-sota-critical-eval.md`](../reasoning-sota-critical-eval.md) - MiniMind v3 SOTA 推理方案诚实评估
 - [`../inference-gap-analysis.md`](../inference-gap-analysis.md) - 推理加速技术 gap 分析（独立话题）
 
