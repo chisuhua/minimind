@@ -2,8 +2,8 @@
 
 > **创建日期**: 2026-06-08
 > **维护范围**: 18 项业界 SOTA 推理加速技术在 MiniMind 中的集成、追踪与修正
-> **配套报告**: [`../inference-gap-analysis.md`](../inference-gap-analysis.md)
-> **实施计划**: [`../../.omo/plans/inference-tech-integration-plan.md`](../../.omo/plans/inference-tech-integration-plan.md)
+> **配套报告**: [`../../inference-gap-analysis.md`](../../inference-gap-analysis.md)
+> **实施计划**: [`../../../../../.omo/plans/inference-tech-integration-plan.md`](../../../../../.omo/plans/inference-tech-integration-plan.md)
 
 ---
 
@@ -46,15 +46,15 @@
 
 | #  | 技术 | 类别 | Wave | 状态 | 文档 |
 |----|------|------|------|------|------|
-| 01 | 预分配 KV 缓存 | KV 缓存 | 1 | ✅ | [→](01-pre-allocated-kv-cache.md) |
-| 02 | StreamingLLM | KV 缓存 | 1 | ✅ | [→](02-streaming-llm.md) |
+| 01 | 预分配 KV 缓存 | KV 缓存 | 1 | ✅ | [→](../../../../inference-engine/01-pre-allocated-kv-cache.md) |
+| 02 | StreamingLLM | KV 缓存 | 1 | ✅ | [→](../../../../inference-engine/02-streaming-llm.md) |
 | 03 | Lookahead Decoding | 推测解码 | 1 | ✅ | [→](03-lookahead-decoding.md) |
 | 04 | PLD / AdaPLD | 推测解码 | 1 | ✅ | [→](04-pld-decoding.md) |
 | 05 | MInference 1.0 | 稀疏注意力 | 1 | ✅ | [→](05-minference.md) |
 | 06 | TriAttention | 稀疏注意力 | 1 | ✅ | [→](06-triattention.md) |
 | 07 | Medusa-1 | 推测解码 | 2 | ✅ | [→](07-medusa.md) |
 | 08 | MTP-as-Draft | 推测解码 | 2 | ✅ | [→](08-mtp-draft.md) |
-| 09 | KIVI 2-bit | KV 缓存 | 2 | ✅ | [→](09-kivi.md) |
+| 09 | KIVI 2-bit | KV 缓存 | 2 | ✅ | [→](../../../../inference-engine/09-kivi.md) |
 | 10 | RTPurbo | 稀疏注意力 | 2 | ✅ | [→](10-rt-purbo.md) |
 | 11 | Gated DeltaNet | 线性注意力 | 3 | ⚠️ | [→](11-gated-deltanet.md) |
 | 12 | Lightning Indexer | 稀疏注意力 | 3 | ⚠️ | [→](12-lightning-indexer.md) |
@@ -72,8 +72,8 @@
 ### Wave 1 · 零训练型推理加速 (6 项)
 > 不需要任何额外训练, 直接在推理时启用即可获得加速。优先级最高, 集成门槛最低。
 
-- **01 · [预分配 KV 缓存](01-pre-allocated-kv-cache.md)**: 避免增量 `torch.cat` 反复分配显存
-- **02 · [StreamingLLM](02-streaming-llm.md)**: 注意力汇点 + 滑动窗口, 支持超长序列
+- **01 · [预分配 KV 缓存](../../../../inference-engine/01-pre-allocated-kv-cache.md)**: 避免增量 `torch.cat` 反复分配显存
+- **02 · [StreamingLLM](../../../../inference-engine/02-streaming-llm.md)**: 注意力汇点 + 滑动窗口, 支持超长序列
 - **03 · [Lookahead Decoding](03-lookahead-decoding.md)**: Jacobi 迭代, 零 draft 模型
 - **04 · [PLD / AdaPLD](04-pld-decoding.md)**: 基于 prompt 的查找式投机解码
 - **05 · [MInference 1.0](05-minference.md)**: 离线标定每个 head 的最优稀疏模式
@@ -84,7 +84,7 @@
 
 - **07 · [Medusa-1](07-medusa.md)**: 在 backbone 上加 K 个并行 decoding heads
 - **08 · [MTP-as-Draft](08-mtp-draft.md)**: 复用主线 MTP head 作为 drafter
-- **09 · [KIVI 2-bit](09-kivi.md)**: KV 缓存 2-bit 量化, 显著降低显存
+- **09 · [KIVI 2-bit](../../../../inference-engine/09-kivi.md)**: KV 缓存 2-bit 量化, 显著降低显存
 - **10 · [RTPurbo](10-rt-purbo.md)**: head-wise 稀疏 + 16-dim 索引, Microsoft 2026
 
 ### Wave 3 · 架构级 PoC (2 项)
@@ -123,9 +123,9 @@
 - [17 · NSA 三路稀疏](17-nsa.md) — 三路压缩
 
 ### 3.3 KV 缓存优化 — 3 项
-- [01 · 预分配 KV 缓存](01-pre-allocated-kv-cache.md) — 显存布局
-- [02 · StreamingLLM](02-streaming-llm.md) — 注意力汇点
-- [09 · KIVI 2-bit](09-kivi.md) — 2-bit 量化
+- [01 · 预分配 KV 缓存](../../../../inference-engine/01-pre-allocated-kv-cache.md) — 显存布局
+- [02 · StreamingLLM](../../../../inference-engine/02-streaming-llm.md) — 注意力汇点
+- [09 · KIVI 2-bit](../../../../inference-engine/09-kivi.md) — 2-bit 量化
 
 ### 3.4 架构级 — 4 项
 - [11 · Gated DeltaNet](11-gated-deltanet.md) — 线性 attn

@@ -4,7 +4,7 @@
 > **审查者**: Sisyphus
 > **审查范围**: 用户提出的"训练优化粗略想法"(下称"原方案")
 > **审查方法**: 直接阅读 `model/model_minimind.py`, `trainer/train_pretrain.py`, `trainer/trainer_utils.py`, `trainer/train_full_sft.py` 等关键文件, 交叉验证原方案每一项主张
-> **配套文档**: [`training-technologies/`](training-technologies/) 下 8 份技术详情
+> **配套文档**: [`training-technologies/`](training-acceleration/training-technologies/) 下 8 份技术详情
 
 ---
 
@@ -121,8 +121,8 @@
 
 **修正建议**:
 - BF16 autocast 已经是基线, **不要再加**
-- 想真正"减半"优化器显存, **改用 8-bit AdamW (bnb)**, 详见 [`training-technologies/03-bnb-8bit-adamw.md`](training-technologies/03-bnb-8bit-adamw.md)
-- 真正的"半精度训练"路线: Liger-Kernel 内部用了 `bf16` 参数 + 动态 loss scaling, 详见 [`training-technologies/04-liger-kernel.md`](training-technologies/04-liger-kernel.md)
+- 想真正"减半"优化器显存, **改用 8-bit AdamW (bnb)**, 详见 [`training-technologies/03-bnb-8bit-adamw.md`](training-acceleration/training-technologies/03-bnb-8bit-adamw.md)
+- 真正的"半精度训练"路线: Liger-Kernel 内部用了 `bf16` 参数 + 动态 loss scaling, 详见 [`training-technologies/04-liger-kernel.md`](training-acceleration/training-technologies/04-liger-kernel.md)
 
 ### 2.4 ZeRO-2/3 + CPU Offload
 
@@ -142,7 +142,7 @@
 **修正建议**:
 - 单卡 4090: 优先用 `bnb.optim.AdamW8bit` (PagedAdamW 自带分页管理, 比 CPU offload 更快)
 - 多卡 4090: 用 `accelerate` + FSDP2 + `cpu_offload=True`
-- 详见 [`training-technologies/05-accelerate-offload.md`](training-technologies/05-accelerate-offload.md)
+- 详见 [`training-technologies/05-accelerate-offload.md`](training-acceleration/training-technologies/05-accelerate-offload.md)
 
 ### 2.5 POET-X
 
@@ -169,13 +169,13 @@
 
 | 技术 | 简介 | MiniMind 收益 | 文档 |
 |------|------|---------------|------|
-| **torch.compile** | PyTorch 原生计算图编译 + CUDA Graphs | 64M 训练 step/s +1.3-1.8x | [`02-torch-compile.md`](training-technologies/02-torch-compile.md) |
-| **8-bit / Paged AdamW** | bitsandbytes 提供的优化器状态压缩 | 优化器状态 -75% | [`03-bnb-8bit-adamw.md`](training-technologies/03-bnb-8bit-adamw.md) |
-| **Liger-Kernel** | Triton 写 fused RMSNorm/RoPE/SwiGLU/CE | 激活 -20%, 速度 +20% | [`04-liger-kernel.md`](training-technologies/04-liger-kernel.md) |
-| **Accelerate Offload** | HuggingFace Accelerate 提供的统一 offload 方案 | 优化器 -100% GPU 占用 | [`05-accelerate-offload.md`](training-technologies/05-accelerate-offload.md) |
-| **Activation Offloading** | 把不参与当前 step 的激活卸载到 CPU | 激活 -50-80% | [`06-activation-offload.md`](training-technologies/06-activation-offload.md) |
-| **MoE Triton Grouped-GEMM** | 替换 MOEFeedForward 的 Python for 循环 | MoE 训练速度 +1.5-3x | [`07-moe-triton-grouped-gemm.md`](training-technologies/07-moe-triton-grouped-gemm.md) |
-| **FSDP2** | PyTorch 2.4+ 的 Fully Sharded Data Parallel v2 | 多卡训练必备 | [`08-fsdp2.md`](training-technologies/08-fsdp2.md) |
+| **torch.compile** | PyTorch 原生计算图编译 + CUDA Graphs | 64M 训练 step/s +1.3-1.8x | [`02-torch-compile.md`](training-acceleration/training-technologies/02-torch-compile.md) |
+| **8-bit / Paged AdamW** | bitsandbytes 提供的优化器状态压缩 | 优化器状态 -75% | [`03-bnb-8bit-adamw.md`](training-acceleration/training-technologies/03-bnb-8bit-adamw.md) |
+| **Liger-Kernel** | Triton 写 fused RMSNorm/RoPE/SwiGLU/CE | 激活 -20%, 速度 +20% | [`04-liger-kernel.md`](training-acceleration/training-technologies/04-liger-kernel.md) |
+| **Accelerate Offload** | HuggingFace Accelerate 提供的统一 offload 方案 | 优化器 -100% GPU 占用 | [`05-accelerate-offload.md`](training-acceleration/training-technologies/05-accelerate-offload.md) |
+| **Activation Offloading** | 把不参与当前 step 的激活卸载到 CPU | 激活 -50-80% | [`06-activation-offload.md`](training-acceleration/training-technologies/06-activation-offload.md) |
+| **MoE Triton Grouped-GEMM** | 替换 MOEFeedForward 的 Python for 循环 | MoE 训练速度 +1.5-3x | [`07-moe-triton-grouped-gemm.md`](training-acceleration/training-technologies/07-moe-triton-grouped-gemm.md) |
+| **FSDP2** | PyTorch 2.4+ 的 Fully Sharded Data Parallel v2 | 多卡训练必备 | [`08-fsdp2.md`](training-acceleration/training-technologies/08-fsdp2.md) |
 
 ---
 
@@ -351,7 +351,7 @@
 
 ### 7.1 立刻可做 (本周)
 
-1. 阅读 [`training-technologies/`](training-technologies/) 下 8 份技术详情文档
+1. 阅读 [`training-technologies/`](training-acceleration/training-technologies/) 下 8 份技术详情文档
 2. 选择 P0 三件套中的**优先一项**开始动手 (建议先 `torch.compile`, 因为改动最小)
 3. 在 64M baseline 上做 A/B 测试, 收集 step/s 和显存数据
 

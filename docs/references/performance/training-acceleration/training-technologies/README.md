@@ -2,7 +2,7 @@
 
 > **创建日期**: 2026-06-08
 > **维护范围**: 训练侧 SOTA 优化技术在 MiniMind 中的现状审查、可行性与集成规划
-> **配套报告**: [`../training-gap-analysis.md`](../training-gap-analysis.md)
+> **配套报告**: [`../../training-gap-analysis.md`](../../training-gap-analysis.md)
 > **目标硬件**: 单卡 / 多卡 NVIDIA RTX 4090 (Ada Lovelace, sm_89, 24GB)
 > **训练目标**: minimind-4 级别 500M-1B Dense / 1.5-3B MoE (64M 激活)
 
@@ -45,7 +45,7 @@
 
 ## 1. 现状速查矩阵 (2026-06-08 审计结果)
 
-> 本表汇总了直接阅读 `model/model_minimind.py` / `trainer/train_*.py` / `trainer/trainer_utils.py` 后的"实际代码状态", 而非 README 自述状态。详见 [`../training-gap-analysis.md`](../training-gap-analysis.md)。
+> 本表汇总了直接阅读 `model/model_minimind.py` / `trainer/train_*.py` / `trainer/trainer_utils.py` 后的"实际代码状态", 而非 README 自述状态。详见 [`../../training-gap-analysis.md`](../../training-gap-analysis.md)。
 
 | 优化技术 | 方案主张 | 实际代码状态 | 证据 |
 |----------|----------|--------------|------|

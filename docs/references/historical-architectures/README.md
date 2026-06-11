@@ -13,8 +13,8 @@
 ### 核心文件
 | 文件 | 主题 | 关键结论 |
 |---|---|---|
-| [`00-iteration-timeline.md`](./00-iteration-timeline.md) | 7 轮迭代演进全景图 | 每个版本的"架构定位 → 致命缺陷 → 改进尝试 → 真实教训"四元组 |
-| [`99-final-recommendation.md`](./99-final-recommendation.md) | 最终推荐路线 + Kill Criteria | MiniMind 项目应该走 v4.5 + 受限增量的务实路径 |
+| [`00-iteration-timeline.md`](../../architectures/00-iteration-timeline.md) | 7 轮迭代演进全景图 | 每个版本的"架构定位 → 致命缺陷 → 改进尝试 → 真实教训"四元组 |
+| [`99-final-recommendation.md`](../../architectures/99-final-recommendation.md) | 最终推荐路线 + Kill Criteria | MiniMind 项目应该走 v4.5 + 受限增量的务实路径 |
 
 ### 各版本详细审查
 | 文件 | 版本 | 评级 | 核心问题 |
@@ -23,25 +23,25 @@
 | [`02-v2-prm-search.md`](./02-v2-prm-search.md) | **v2 修正方案** | C+ | PRM + Search + R1-Zero：组件选型错误（min(PRM)、标准 GRPO） |
 | [`03-v3-pors.md`](./03-v3-pors.md) | **v3 PORS** | C+ | SOTA 精度对齐：6 项事实性错误 + 5 个系统性盲区 |
 | [`04-v4-nacr.md`](./04-v4-nacr.md) | **v4 NACR** | C- | <2B 异构协作：6 项事实性错误 + 生产化先例为零 |
-| [`04b-v4.5-and-v4.6.md`](./04b-v4.5-and-v4.6.md) | **v4.5 + v4.6** | **A-/B+** | 务实收敛：1.5B + Engine Verify + GraphRAG（最终推荐路径） |
+| [`04b-v4.5-and-v4.6.md`](../../architectures/04b-v4.5-and-v4.6.md) | **v4.5 + v4.6** | **A-/B+** | 务实收敛：1.5B + Engine Verify + GraphRAG（最终推荐路径） |
 | [`05-agi-heterogeneous.md`](./05-agi-heterogeneous.md) | **AGI 异构架构** | D+ | 6 组件异构：v1 的究极翻版，30% 真实 + 70% 装饰 |
-| [`06-metacognitive-closed-loop.md`](./06-metacognitive-closed-loop.md) | **元认知闭环** | B+ | 推理→置信度→检索→重推理：窄场景优化器，6% 端到端增益 |
+| [`06-metacognitive-closed-loop.md`](../../architectures/06-metacognitive-closed-loop.md) | **元认知闭环** | B+ | 推理→置信度→检索→重推理：窄场景优化器，6% 端到端增益 |
 
 ---
 
 ## 🗺️ 阅读路径建议
 
 ### 路径 A：快速决策（10 分钟）
-1. 读 [`00-iteration-timeline.md`](./00-iteration-timeline.md) 的"7 轮迭代总览表"
-2. 读 [`99-final-recommendation.md`](./99-final-recommendation.md) 的"一句话最终建议"
+1. 读 [`00-iteration-timeline.md`](../../architectures/00-iteration-timeline.md) 的"7 轮迭代总览表"
+2. 读 [`99-final-recommendation.md`](../../architectures/99-final-recommendation.md) 的"一句话最终建议"
 3. 完成
 
 ### 路径 B：完整理解（1 小时）
-1. [`00-iteration-timeline.md`](./00-iteration-timeline.md) - 演进全景
+1. [`00-iteration-timeline.md`](../../architectures/00-iteration-timeline.md) - 演进全景
 2. [`01-v1-md-cds.md`](./01-v1-md-cds.md) - 起点问题
 3. [`02-v2-prm-search.md`](./02-v2-prm-search.md) - 第一次纠错
-4. [`04b-v4.5-and-v4.6.md`](./04b-v4.5-and-v4.6.md) - 务实收敛点
-5. [`99-final-recommendation.md`](./99-final-recommendation.md) - 最终路线
+4. [`04b-v4.5-and-v4.6.md`](../../architectures/04b-v4.5-and-v4.6.md) - 务实收敛点
+5. [`99-final-recommendation.md`](../../architectures/99-final-recommendation.md) - 最终路线
 
 ### 路径 C：批判性精读（3 小时+）
 按顺序读完所有 8 个文件，重点关注每个版本"为什么失败 / 为什么这次不同"。
@@ -56,9 +56,9 @@
 
 ## 📚 关联文档
 
-- [`../PRM_RESEARCH_REPORT.md`](../PRM_RESEARCH_REPORT.md) - PRM 路线深度调研（v2 时做的）
-- [`../reasoning-sota-critical-eval.md`](../reasoning-sota-critical-eval.md) - MiniMind v3 SOTA 推理方案诚实评估
-- [`../inference-gap-analysis.md`](../inference-gap-analysis.md) - 推理加速技术 gap 分析（独立话题）
+- [`./PRM_RESEARCH_REPORT.md`](./PRM_RESEARCH_REPORT.md) - PRM 路线深度调研（v2 时做的）
+- [`../methodology/reasoning-sota-critical-eval.md`](../methodology/reasoning-sota-critical-eval.md) - MiniMind v3 SOTA 推理方案诚实评估
+- [`../performance/inference-gap-analysis.md`](../performance/inference-gap-analysis.md) - 推理加速技术 gap 分析（独立话题）
 
 ---
 

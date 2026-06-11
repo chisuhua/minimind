@@ -5,10 +5,10 @@
 > **创建日期**：2026-06-09
 > **brainstorming 来源**：与用户多轮对话 + ontology/neuro-symbolic学术调研
 > **关联文档**：
-> - [`reasoning-distillation-survey/`](./reasoning-distillation-survey/) —推理轨迹蒸馏 +迭代推理双方案调研（前序工作）
-> - [`small-model-reasoning-survey/`](./small-model-reasoning-survey/) —1B推理能力综合调研
-> - [`reasoning-architectures/`](./reasoning-architectures/) — minimind推理架构7轮迭代
-> - [`reasoning-sota-critical-eval.md`](./reasoning-sota-critical-eval.md) —推理 SOTA批判性评估
+> - [`reasoning-distillation-survey/`](./references/methodology/reasoning-distillation-survey/) —推理轨迹蒸馏 +迭代推理双方案调研（前序工作,现归入 `references/methodology/`）
+> - [`small-model-reasoning-survey/`](./references/methodology/small-model-reasoning-survey/) —1B推理能力综合调研(现归入 `references/methodology/`)
+> - [`architectures/`](./architectures/) — minimind推理架构 7 轮迭代中的 4 份 DIRECT 主线(00/04b/06/99),其余档案已移入 [`references/historical-architectures/`](./references/historical-architectures/)
+> - [`reasoning-sota-critical-eval.md`](./references/methodology/reasoning-sota-critical-eval.md) —推理 SOTA批判性评估(现归入 `references/methodology/`)
 
 ---
 

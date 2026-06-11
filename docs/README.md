@@ -6,7 +6,10 @@
 
 ## 🎯 项目核心目标
 
-> **用 <1B激活参数构造一个"认知推理模型"（Cognitive Reasoning Model），区别于 LLM 的 CoT推理，核心是基于"领域本体 +逻辑规则 +文档三元组 + AgenticDSL + 自然语言 +基础认知"六层知识形态栈，进行6 类认知推理（因果、依赖、相似、对象联系、语义关系、规则/时间）。模型知道自己不知道的知识，并能通过拒答、检索、学习提示三种机制处理知识缺口。**
+> **用 <1B 激活参数构造一个"自循环的认知推理模型"（Self-Bootstrapping Cognitive Reasoning Model）**：
+> 模型不直接生成自然语言答案，而是 **通过 AgenticDSL 语言**（领域专用、带强制签名、可执行验证的符号化推理 IR） **与智能体运行时（Agent Runtime）协同**——由 AgenticDSL 驱动推理计算图、由运行时执行求解并产生推理输出，而推理输出的质量评估又会反向驱动 AgenticDSL 运行时持续优化与自进化，形成 **生成 → 执行 → 评估 → 优化** 的自举闭环（Forth-style Bootstrap）。
+>
+> 区别于 LLM 的 CoT 推理，模型以 **"领域本体 + 逻辑规则 + 文档三元组 + AgenticDSL + 自然语言 + 基础认知"** 六层知识形态栈为基础，执行 6 类认知推理（因果、依赖、相似、对象联系、语义关系、规则/时间）。模型知道自己不知道的知识，并通过拒答、检索、学习提示三种机制处理知识缺口。
 
 ---
 
@@ -18,9 +21,10 @@
 |---|---|---|
 | **知识基础** | 模型参数化的隐式知识 | **显式 ontology +规则 + 三元组**（可外部检索） |
 | **推理类型** |自由语言多步推导 | **因果、依赖、相似、对象联系、语义、规则/时间6 类形式化推理** |
-| **推理过程** | 自然语言 CoT链 | **实体-关系图谱遍历 +逻辑规则 +外部求解器** |
-| **可解释性** | 黑盒（语言叙述） | **可审计**（图谱路径 +求解器输出） |
-| **知识更新** |需重训 | **ontology/规则可独立更新** |
+| **推理过程** | 自然语言 CoT链 | **AgenticDSL 驱动计算图 + 实体-关系图谱遍历 +逻辑规则 +外部求解器** |
+| **运行模式** | 单轮生成 → 输出文本 | **与智能体运行时协同的自循环闭环（生成 → 执行 → 评估 → 优化）** |
+| **可解释性** | 黑盒（语言叙述） | **可审计**（AgenticDSL 程序 + 图谱路径 + 求解器输出 + 评估轨迹） |
+| **知识更新** |需重训 | **ontology/规则/AgenticDSL 子图可独立更新，运行时持续自进化** |
 | **失败模式** |幻觉（自由生成错误） | **拒答**（超出 ontology范围时） |
 
 ---
@@ -141,40 +145,72 @@
 | **求解器** | Prover9 (FOL) + clingo (ASP) + Z3 (SMT) | Logic-LM范式标准组件 |
 | **本体序列化** | Loreto | token减少30%+，LLM-friendly |
 | **本体嵌入** | OWL2Vec* | OWL ontology →稠密向量 |
-| **训练范式** | Logic-LM + NeurASP + DPO |阶段递进 |
+| **AgenticDSL 语言** | HydraForge AgenticDSL（Markdown + 嵌入式 YAML + 显式签名 + 强制围栏） | LLM-aware、可验证、可执行；详见 [`agenticdsl-training/`](./agenticdsl-training/) |
+| **智能体运行时** | HydraForge C++ 引擎（ILLMProvider + Topological Scheduler + ToolRegistry + BudgetController + OpenTelemetry Trace） | 自循环闭环的执行与评估底座 |
+| **训练范式** | Logic-LM + NeurASP + DPO + AgenticDSL 自训练（ReSTᴱᴹ → OmegaPRM → MCTS → GRPO） |阶段递进，覆盖六层栈 + 自举闭环 |
 | **KG推理** | GCR + ToG + PoG | sub-1B友好 |
 
 ---
 
-## 📁文档结构索引
+## 📁 文档结构索引
 
-###核心目标与设计
+> **重组时间**：2026-06-11
+> **重组原则**：按"自循环认知推理模型"新目标分级——**直接相关(DIRECT / CRITICAL)** 放在顶层 3 个技术系列目录,**间接 / 边缘相关(INDIRECT / PERIPHERAL)** 移入 `references/` 参考目录。
 
-|文档 | 内容 |
-|---|---|
-| **[`README.md`](./README.md)** | **本文件**：项目核心目标与文档索引 |
-| **[`cognitive-reasoning-model.md`](./cognitive-reasoning-model.md)** | 项目目标完整定义（含决策记录、技术路径、风险预案、补充维度：KG-Prolog闭环 + 四重置信度过滤 + 因果推理） |
+### 🎯 核心目标与设计(DIRECT · 顶层)
 
-###调研与论证
-
-|文档 | 内容 | 推荐度 |
+| 文档 | 关联度 | 内容 |
 |---|---|---|
-| [`reasoning-distillation-survey/`](./reasoning-distillation-survey/) |推理轨迹蒸馏 + 分步迭代推理双方案调研 | ⭐⭐⭐⭐ |
-| [`small-model-reasoning-survey/`](./small-model-reasoning-survey/) |1B 小模型推理能力综合调研（含 R1-Distill + GRPO） | ⭐⭐⭐⭐⭐ |
-| [`reasoning-architectures/`](./reasoning-architectures/) | minimind推理架构7轮迭代（v1 → v4.6 → AGI） | ⭐⭐⭐⭐⭐ |
-| [`reasoning-sota-critical-eval.md`](./reasoning-sota-critical-eval.md) |推理 SOTA批判性评估 | ⭐⭐⭐ |
-| [`inference-gap-analysis.md`](./inference-gap-analysis.md) |推理加速技术 gap 分析 | ⭐⭐⭐ |
-| [`training-gap-analysis.md`](./training-gap-analysis.md) |训练技术 gap 分析 | ⭐⭐⭐ |
+| **[`README.md`](./README.md)** | ⭐⭐ | **本文件**：项目核心目标与文档索引 |
+| **[`cognitive-reasoning-model.md`](./cognitive-reasoning-model.md)** | ⭐⭐ | 项目目标完整定义(含决策记录、技术路径、风险预案、补充维度:KG-Prolog 闭环 + 四重置信度过滤 + 因果推理) |
 
-### 子目录详细索引
+### 🧠 AgenticDSL 训练主干(DIRECT · 技术系列 A)
 
-| 子目录 |核心内容 |
-|---|---|
-| [`reasoning-distillation-survey/`](./reasoning-distillation-survey/) |推理蒸馏双方案核查 +21 个开源实现清单 |
-| [`small-model-reasoning-survey/`](./small-model-reasoning-survey/) |6 个并行 agent调研底稿 + 用户提议 +修正建议 |
-| [`reasoning-architectures/`](./reasoning-architectures/) |7轮架构迭代 + 最终推荐 v4.5 主路径 |
-| [`training-technologies/`](./training-technologies/) |训练技术调研 |
-| [`inference-technologies/`](./inference-technologies/) |推理引擎与加速技术调研 |
+> **目录**:[`agenticdsl-training/`](./agenticdsl-training/) —— 8 份,直接对应"生成 → 执行 → 评估 → 优化"自举闭环中的"生成"侧。
+
+| 文档 | 关联度 | 内容 |
+|---|---|---|
+| [`agenticdsl-training/README.md`](./agenticdsl-training/README.md) | ⭐⭐ | AgenticDSL LLM 训练综述 |
+| [`agenticdsl-training/01-training-data-pipeline.md`](./agenticdsl-training/01-training-data-pipeline.md) | ⭐⭐ | 9 阶段 SFT 数据构造 |
+| [`agenticdsl-training/02-training-algorithms.md`](./agenticdsl-training/02-training-algorithms.md) | ⭐⭐ | 6 阶段自训练 Recipe(ReSTᴱᴹ → OmegaPRM → MCTS → GRPO → SPIN) |
+| [`agenticdsl-training/03-inference-time-guarantees.md`](./agenticdsl-training/03-inference-time-guarantees.md) | ⭐⭐ | XGrammar + Tree-sitter 推理栈,确保 AgenticDSL 生成合规 |
+| [`agenticdsl-training/04-evaluation-benchmark.md`](./agenticdsl-training/04-evaluation-benchmark.md) | ⭐⭐ | HydraForgeBench 8 维度评估 |
+| [`agenticdsl-training/05-risk-register.md`](./agenticdsl-training/05-risk-register.md) | ⭐⭐ | 12 个训练关键风险 |
+| [`agenticdsl-training/06-vn001-alignment.md`](./agenticdsl-training/06-vn001-alignment.md) | ⭐⭐ | 与 VN-001 自举愿景对齐路径 |
+| [`agenticdsl-training/07-vs-initial-analysis.md`](./agenticdsl-training/07-vs-initial-analysis.md) | ⭐⭐ | 与初步分析差异对照 |
+
+### 🏗️ 推理架构(DIRECT · 技术系列 B)
+
+> **目录**:[`architectures/`](./architectures/) —— 4 份,推理架构 7 轮迭代中提取的 DIRECT 主线。
+
+| 文档 | 关联度 | 内容 |
+|---|---|---|
+| [`architectures/README.md`](./architectures/README.md) | ⭐ | 目录索引(7 轮全景 / v4.5 收敛 / 元认知闭环 / 最终决策) |
+| [`architectures/00-iteration-timeline.md`](./architectures/00-iteration-timeline.md) | ⭐ | 7 轮推理架构迭代全景图 |
+| [`architectures/04b-v4.5-and-v4.6.md`](./architectures/04b-v4.5-and-v4.6.md) | ⭐ | v4.5 务实收敛 + v4.6 知识外挂(唯一可落地工程路径) |
+| [`architectures/06-metacognitive-closed-loop.md`](./architectures/06-metacognitive-closed-loop.md) | ⭐⭐ | **元认知闭环**:与"自循环"概念一一对应(推理→置信度→检索→重推理) |
+| [`architectures/99-final-recommendation.md`](./architectures/99-final-recommendation.md) | ⭐ | 最终推荐路线 + Kill Criteria |
+
+### ⚙️ 推理引擎(CRITICAL_FOR_LOOP · 技术系列 C)
+
+> **目录**:[`inference-engine/`](./inference-engine/) —— 3 份,**自循环 AgenticDSL 推理的关键基础设施**(不是"性能优化",而是"自循环工程基础")。
+
+| 文档 | 关联度 | 关键作用 |
+|---|---|---|
+| [`inference-engine/README.md`](./inference-engine/README.md) | ⭐ | 目录索引(为何这些是自循环关键支撑) |
+| [`inference-engine/01-pre-allocated-kv-cache.md`](./inference-engine/01-pre-allocated-kv-cache.md) | ⭐⭐ | 预分配 KV 缓存 — prefix 复用物理底座(已实现) |
+| [`inference-engine/02-streaming-llm.md`](./inference-engine/02-streaming-llm.md) | ⭐⭐ | StreamingLLM — 长链路不爆显存(已实现) |
+| [`inference-engine/09-kivi.md`](./inference-engine/09-kivi.md) | ⭐⭐ | KIVI 2-bit 量化 — KV cache 压缩(已实现) |
+
+### 📚 参考目录(INDIRECT / PERIPHERAL)
+
+> **目录**:[`references/`](./references/) —— 40 份 INDIRECT + 6 份 PERIPHERAL 文档,按用途分 3 个子目录。
+
+| 子目录 | 文档数 | 内容 |
+|---|---|---|
+| [`references/methodology/`](./references/methodology/) | 15 份 | 通用推理方法学(蒸馏 / 小模型调研 / SOTA 评估) |
+| [`references/performance/`](./references/performance/) | 28 份 | 性能优化参考(推理加速 / 训练加速 / gap 分析) |
+| [`references/historical-architectures/`](./references/historical-architectures/) | 7 份 | 7 轮架构迭代中的 5 份早期方案 + 1 份 PRM 调研(反面参考) |
 
 ---
 
@@ -208,13 +244,17 @@
 
 ## 🚀 阅读建议
 
-|读者 | 阅读顺序 |
+> 阅读顺序按"项目核心目标 → 技术系列 → 参考目录"的三层结构组织。
+
+| 读者 | 推荐阅读路径 |
 |---|---|
-| **项目负责人 /决策者** | 本 README → [`cognitive-reasoning-model.md`](./cognitive-reasoning-model.md) |
-| **架构师 / 技术负责人** | 本 README → [`reasoning-architectures/`](./reasoning-architectures/) → [`cognitive-reasoning-model.md`](./cognitive-reasoning-model.md) |
-| **算法工程师** | [`cognitive-reasoning-model.md`](./cognitive-reasoning-model.md) → [`reasoning-distillation-survey/`](./reasoning-distillation-survey/) → [`small-model-reasoning-survey/`](./small-model-reasoning-survey/) |
-| **数据 /训练工程师** | [`small-model-reasoning-survey/`](./small-model-reasoning-survey/) → [`cognitive-reasoning-model.md`](./cognitive-reasoning-model.md) |
-| **新加入成员** | 本 README（建立全局观）→各自方向对应子目录 |
+| **项目负责人 / 决策者** | 本 README → [`cognitive-reasoning-model.md`](./cognitive-reasoning-model.md) → [`architectures/99-final-recommendation.md`](./architectures/99-final-recommendation.md) |
+| **架构师 / 技术负责人** | 本 README → [`architectures/`](./architectures/) → [`inference-engine/`](./inference-engine/) → [`cognitive-reasoning-model.md`](./cognitive-reasoning-model.md) |
+| **AgenticDSL 训练工程师** | [`agenticdsl-training/`](./agenticdsl-training/) → [`architectures/06-metacognitive-closed-loop.md`](./architectures/06-metacognitive-closed-loop.md) |
+| **自循环概念研究者** | [`architectures/06-metacognitive-closed-loop.md`](./architectures/06-metacognitive-closed-loop.md) → [`agenticdsl-training/06-vn001-alignment.md`](./agenticdsl-training/06-vn001-alignment.md) → [`references/methodology/small-model-reasoning-survey/05-loop-model-deepdive.md`](./references/methodology/small-model-reasoning-survey/05-loop-model-deepdive.md) |
+| **推理引擎集成者** | [`inference-engine/`](./inference-engine/) → [`references/performance/inference-acceleration/inference-technologies/`](./references/performance/inference-acceleration/inference-technologies/) |
+| **数据 / 训练工程师** | [`agenticdsl-training/01-training-data-pipeline.md`](./agenticdsl-training/01-training-data-pipeline.md) → [`agenticdsl-training/02-training-algorithms.md`](./agenticdsl-training/02-training-algorithms.md) → [`references/methodology/small-model-reasoning-survey/02-training-strategy-survey.md`](./references/methodology/small-model-reasoning-survey/02-training-strategy-survey.md) |
+| **新加入成员** | 本 README(建立全局观)→ [`cognitive-reasoning-model.md`](./cognitive-reasoning-model.md) → 各自方向对应技术系列 |
 
 ---
 
