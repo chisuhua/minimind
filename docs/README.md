@@ -6,10 +6,15 @@
 
 ## 🎯 项目核心目标
 
-> **用 <1B 激活参数构造一个"自循环的认知推理模型"（Self-Bootstrapping Cognitive Reasoning Model）**：
-> 模型不直接生成自然语言答案，而是 **通过 AgenticDSL 语言**（领域专用、带强制签名、可执行验证的符号化推理 IR） **与智能体运行时（Agent Runtime）协同**——由 AgenticDSL 驱动推理计算图、由运行时执行求解并产生推理输出，而推理输出的质量评估又会反向驱动 AgenticDSL 运行时持续优化与自进化，形成 **生成 → 执行 → 评估 → 优化** 的自举闭环（Forth-style Bootstrap）。
+> **用 <1B 激活参数，通过大模型与智能体的紧耦合协作，达到认知推理的 SOTA。**
 >
-> 区别于 LLM 的 CoT 推理，模型以 **"领域本体 + 逻辑规则 + 文档三元组 + AgenticDSL + 自然语言 + 基础认知"** 六层知识形态栈为基础，执行 6 类认知推理（因果、依赖、相似、对象联系、语义关系、规则/时间）。模型知道自己不知道的知识，并通过拒答、检索、学习提示三种机制处理知识缺口。
+> **"紧耦合"** 指 LLM 与智能体运行时（agent runtime）通过 **共享结构化状态**（如 KV cache prefix 复用、assert 验证器反馈、ontology/规则子图）协同，而不是仅通过自然语言 tool call。这避免了 Mirror Loop 风险（无 grounding 的语义循环），也是 LLM + agent 区别于"LLM 调用工具"的核心特征。
+>
+> 关键技术之一是通过 AgenticDSL 进行 **自循环推理**，包括两个层次：
+> 1. **Confidence-Triggered Loop**：LLM 生成 AgenticDSL 程序 → 智能体运行时执行 → 置信度评估 → 不达标则触发知识检索/注入 → 重新推理，直到达标
+> 2. **Prefix-Accumulation Step-by-Step Loop**：LLM 每次只推理一个步骤 → 上一步推理过程作为 prefix 累积 → 在不改变 prefix 的前提下要求推理下一步骤 → 通过"单步深度 + prefix 累积"避免小模型做长推理的 context 局限
+>
+> 通过两个层次的自循环，在保持 <1B 激活参数的同时获得长链推理能力。区别于 LLM 的 CoT 推理，模型以 **"领域本体 + 逻辑规则 + 文档三元组 + AgenticDSL + 自然语言 + 基础认知"** 六层知识形态栈为基础，执行 6 类认知推理（因果、依赖、相似、对象联系、语义关系、规则/时间），并通过拒答、检索、学习提示三种机制处理知识缺口。
 
 ---
 
@@ -22,9 +27,9 @@
 | **知识基础** | 模型参数化的隐式知识 | **显式 ontology +规则 + 三元组**（可外部检索） |
 | **推理类型** |自由语言多步推导 | **因果、依赖、相似、对象联系、语义、规则/时间6 类形式化推理** |
 | **推理过程** | 自然语言 CoT链 | **AgenticDSL 驱动计算图 + 实体-关系图谱遍历 +逻辑规则 +外部求解器** |
-| **运行模式** | 单轮生成 → 输出文本 | **与智能体运行时协同的自循环闭环（生成 → 执行 → 评估 → 优化）** |
+| **运行模式** | 单轮生成 → 输出文本 | **两层次自循环推理**（Confidence-Triggered Loop + Prefix-Accumulation Step-by-Step Loop） |
 | **可解释性** | 黑盒（语言叙述） | **可审计**（AgenticDSL 程序 + 图谱路径 + 求解器输出 + 评估轨迹） |
-| **知识更新** |需重训 | **ontology/规则/AgenticDSL 子图可独立更新，运行时持续自进化** |
+| **知识更新** |需重训 | **ontology/规则/AgenticDSL 子图可独立更新，通过两层次自循环持续优化** |
 | **失败模式** |幻觉（自由生成错误） | **拒答**（超出 ontology范围时） |
 
 ---
@@ -115,7 +120,7 @@
 
 ---
 
-## 📊评测体系：7 项完整指标
+## 📊评测体系：10 项完整指标
 
 | # |指标 |阶段1 |阶段2 |阶段3 |
 |---|---|---|---|---|
@@ -125,7 +130,10 @@
 |4 | **零样本泛化** | — | ≥30% | ≥50% |
 |5 | **反例鲁棒性** | — | — | ≥60% |
 |6 | **跨领域迁移** | — | — | ≥40% |
-|7 | **对齐率**（vs GPT-4） | — | ≥60% | ≥70% |
+|7 | **对齐率**（vs 同尺寸 SOTA） | — | ≥60% | ≥70% |
+| **8** | **自循环收敛速度**（loop 触发次数 / 收敛步数） | ≤ 3 步 | ≤ 2 步 | ≤ 2 步 |
+| **9** | **Prefix-Accumulation 收益**（与 Long-CoT 退化对比） | ≥ +0% | ≥ +10% | ≥ +20% |
+| **10** | **Mirror Loop 防御率**（循环不收敛失败模式检测） | ≥ 90% | ≥ 95% | ≥ 99% |
 
 **评测 benchmark清单**：
 - Logic-LM5 个 benchmark（ProofWriter / PrOntoQA / FOLIO / LogicalDeduction / AR-LSAT）
@@ -133,6 +141,25 @@
 - Temporal：CronKGQA / RE-Net 测试集
 - Causal：ATOMIC / SCIE 测试集
 -通用：CommonsenseQA / OpenBookQA
+
+---
+
+## 📊 SOTA 对标基准
+
+> 本项目 SOTA 主张采用**双轨制**——对内争 **sub-1B 范围 SOTA**,对外引用 **GPT-4 / Claude** 作为上限参考,展示"小模型 + 紧耦合协作"的相对优势。
+
+| 维度 | 对内基线（sub-1B 实证） | 对外参考（跨尺度 SOTA） |
+|---|---|---|
+| **同尺寸逻辑推理** | T5-large 770M 在 ProofWriter depth-5 达 **85.4%** / NL2LOGIC 0.5B-1.5B AST-guided 达 **99% executable** | — |
+| **跨尺度参考** | — | GPT-4 / Claude-3.5 / DeepSeek-R1 |
+| **Tool-Use 实证** | TinyAgent-1.1B + ToolRAG 达 **80.06%** function calling | GPT-4-turbo 79.08%（**已超**） |
+| **TTS 数学** | 1B + TTS 在 MATH-500 **超 405B** 模型 | DeepSeek-R1 / o1 |
+| **自循环可观测** | Confidence-Triggered Loop 收敛步数 ≤ 2 / Prefix-Accumulation 收益 ≥ +10% vs Long-CoT 退化 | Self-Refine (NeurIPS 2023) 平均 +20% 提升 |
+
+**不宣称**:
+- ❌ 跨尺度通用 SOTA。所有 SOTA 主张限定在 **sub-1B 子领域**的"首个 / 持平 / 超越"
+- ❌ 完全消解 LLM 一次性生成能力。本项目**不取代** GPT-4/Claude,而是提供"小模型 + 紧耦合"路径的另一种选择
+- ❌ HydraForge VN-001 的"自举"愿景(那是 HydraForge 的 4 阶段宏观路线,见 [`agenticdsl-training/06-vn001-alignment.md`](./agenticdsl-training/06-vn001-alignment.md))
 
 ---
 
@@ -146,8 +173,8 @@
 | **本体序列化** | Loreto | token减少30%+，LLM-friendly |
 | **本体嵌入** | OWL2Vec* | OWL ontology →稠密向量 |
 | **AgenticDSL 语言** | HydraForge AgenticDSL（Markdown + 嵌入式 YAML + 显式签名 + 强制围栏） | LLM-aware、可验证、可执行；详见 [`agenticdsl-training/`](./agenticdsl-training/) |
-| **智能体运行时** | HydraForge C++ 引擎（ILLMProvider + Topological Scheduler + ToolRegistry + BudgetController + OpenTelemetry Trace） | 自循环闭环的执行与评估底座 |
-| **训练范式** | Logic-LM + NeurASP + DPO + AgenticDSL 自训练（ReSTᴱᴹ → OmegaPRM → MCTS → GRPO） |阶段递进，覆盖六层栈 + 自举闭环 |
+| **智能体运行时** | HydraForge C++ 引擎（ILLMProvider + Topological Scheduler + ToolRegistry + BudgetController + OpenTelemetry Trace） | 自循环推理的执行与评估底座 |
+| **训练范式** | Logic-LM + NeurASP + DPO + AgenticDSL 自训练（ReSTᴱᴹ → OmegaPRM → MCTS → GRPO） |阶段递进，覆盖六层栈 + 自循环推理 |
 | **KG推理** | GCR + ToG + PoG | sub-1B友好 |
 
 ---
@@ -166,7 +193,7 @@
 
 ### 🧠 AgenticDSL 训练主干(DIRECT · 技术系列 A)
 
-> **目录**:[`agenticdsl-training/`](./agenticdsl-training/) —— 8 份,直接对应"生成 → 执行 → 评估 → 优化"自举闭环中的"生成"侧。
+> **目录**:[`agenticdsl-training/`](./agenticdsl-training/) —— 8 份,直接对应自循环推理中 LLM **生成 AgenticDSL 程序**的能力训练。
 
 | 文档 | 关联度 | 内容 |
 |---|---|---|
@@ -176,7 +203,7 @@
 | [`agenticdsl-training/03-inference-time-guarantees.md`](./agenticdsl-training/03-inference-time-guarantees.md) | ⭐⭐ | XGrammar + Tree-sitter 推理栈,确保 AgenticDSL 生成合规 |
 | [`agenticdsl-training/04-evaluation-benchmark.md`](./agenticdsl-training/04-evaluation-benchmark.md) | ⭐⭐ | HydraForgeBench 8 维度评估 |
 | [`agenticdsl-training/05-risk-register.md`](./agenticdsl-training/05-risk-register.md) | ⭐⭐ | 12 个训练关键风险 |
-| [`agenticdsl-training/06-vn001-alignment.md`](./agenticdsl-training/06-vn001-alignment.md) | ⭐⭐ | 与 VN-001 自举愿景对齐路径 |
+| [`agenticdsl-training/06-vn001-alignment.md`](./agenticdsl-training/06-vn001-alignment.md) | ⭐⭐ | 与 **HydraForge VN-001 愿景**对齐路径(HydraForge 的"自举"是 4 阶段宏观路线,**非本项目目标**) |
 | [`agenticdsl-training/07-vs-initial-analysis.md`](./agenticdsl-training/07-vs-initial-analysis.md) | ⭐⭐ | 与初步分析差异对照 |
 
 ### 🏗️ 推理架构(DIRECT · 技术系列 B)

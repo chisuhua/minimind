@@ -14,7 +14,15 @@
 
 ## 🎯 一、一句话目标
 
-> **用 <1B激活参数构造一个"认知推理模型"（Cognitive Reasoning Model），区别于 LLM 的 CoT推理，核心是基于"领域本体 +逻辑规则 +文档三元组 + AgenticDSL + 自然语言 +基础认知"六层知识形态栈，进行6 类认知推理（因果、依赖、相似、对象联系、语义关系、规则/时间）。模型知道自己不知道的知识，并能通过拒答、检索、学习提示三种机制处理知识缺口。**
+> **用 <1B 激活参数，通过大模型与智能体的紧耦合协作，达到认知推理的 SOTA。**
+>
+> **"紧耦合"** 指 LLM 与智能体运行时（agent runtime）通过 **共享结构化状态**（如 KV cache prefix 复用、assert 验证器反馈、ontology/规则子图）协同，而不是仅通过自然语言 tool call。这避免了 Mirror Loop 风险（无 grounding 的语义循环），也是 LLM + agent 区别于"LLM 调用工具"的核心特征。
+>
+> 关键技术之一是通过 AgenticDSL 进行 **自循环推理**，包括两个层次：
+> 1. **Confidence-Triggered Loop**：LLM 生成 AgenticDSL 程序 → 智能体运行时执行 → 置信度评估 → 不达标则触发知识检索/注入 → 重新推理，直到达标
+> 2. **Prefix-Accumulation Step-by-Step Loop**：LLM 每次只推理一个步骤 → 上一步推理过程作为 prefix 累积 → 在不改变 prefix 的前提下要求推理下一步骤 → 通过"单步深度 + prefix 累积"避免小模型做长推理的 context 局限
+>
+> 通过两个层次的自循环，在保持 <1B 激活参数的同时获得长链推理能力。模型以 **"领域本体 + 逻辑规则 + 文档三元组 + AgenticDSL + 自然语言 + 基础认知"** 六层知识形态栈为基础，执行 6 类认知推理（因果、依赖、相似、对象联系、语义关系、规则/时间），并通过拒答、检索、学习提示三种机制处理知识缺口。
 
 ---
 
@@ -26,9 +34,10 @@
 |---|---|---|
 | **知识基础** | 模型参数化的隐式知识 |显式 ontology +规则 + 三元组（可外部检索） |
 | **推理类型** |自由语言多步推导 | 因果、依赖、相似、对象联系、语义、规则/时间6 类形式化推理 |
-| **推理过程** | 自然语言 CoT链 |实体-关系图谱遍历 +逻辑规则 +外部求解器 |
-| **可解释性** | 黑盒（语言叙述） | **可审计**（图谱路径 +求解器输出） |
-| **知识更新** |需重训 | ontology/规则可独立更新 |
+| **推理过程** | 自然语言 CoT链 |**两层次自循环推理**（Confidence-Triggered Loop + Prefix-Accumulation Step-by-Step Loop） + 实体-关系图谱遍历 +逻辑规则 +外部求解器 |
+| **运行模式** | 单轮生成 → 输出文本 | **与智能体运行时紧耦合的两层次自循环推理**（详见 §2.5） |
+| **可解释性** | 黑盒（语言叙述） | **可审计**（AgenticDSL 程序 + 图谱路径 + 求解器输出 + 评估轨迹） |
+| **知识更新** |需重训 | **ontology/规则/AgenticDSL 子图可独立更新，通过两层次自循环持续优化** |
 | **失败模式** |幻觉（自由生成错误） |拒答（超出 ontology范围时） |
 
 ###2.26 类认知推理（用户已确认全谱覆盖）
@@ -41,6 +50,8 @@
 |4 | **对象联系推理** | `partOf(X, Y)` / `hasProperty(X, Y)` | ConceptNet, 自建本体 |
 |5 | **语义关系推理** | `isA(X, Y)` / `hasA(X, Y)` | WordNet, ConceptNet |
 |6 | **规则/时间推理** | `before(X, Y)` / `rule(X, Y, Z)` | OWL-Time, SWRL规则 |
+
+**MVP 范围(决策 #15)**:长期保留 6 类认知推理分类,但 M1-M2 阶段优先深耕 **2-3 类**——初步选 **因果推理 + 规则/时间推理** 作为 MVP,因其分别覆盖 ontology 索引路径（ATOMIC + ConceptNet Causes）与 SWRL/OWL-Time 规则路径,可最大化紧耦合基础设施的复用价值。其余 4 类（依赖、相似、对象联系、语义关系）在 M3+ 阶段逐步加入。
 
 ###2.3知识形态栈（6 层结构）
 
@@ -72,98 +83,145 @@
 
 **置信度校准**：每个推理输出附带校准后的 `confidence ∈ [0,1]`，用于触发上述机制。
 
+### 2.5 自循环推理的技术内涵
+
+> **本节为本项目区别于 LLM 一次性 CoT 推理的核心技术机制**——LLM 不是一次性吐出整条推理链，而是通过两个层次的"自循环"在保持小参数量的同时获得长链推理能力。
+
+**层次一：Confidence-Triggered Loop（置信度触发循环）**
+
+- **机制**：LLM 生成 AgenticDSL 程序 → 智能体运行时执行 → 置信度评估 → 若不达标则触发知识检索/注入 → 重新推理，直到达标
+- **来源**：见 [`docs/architectures/06-metacognitive-closed-loop.md`](./architectures/06-metacognitive-closed-loop.md)（元认知闭环 v4.7，评级 B+，knowledge-intensive QA sweet spot 有效）
+- **适用场景**：单 query 内需要补充知识缺口（如本体未覆盖、规则冲突、推理路径不确定）时
+
+**层次二：Prefix-Accumulation Step-by-Step Loop（前缀累积逐步循环）**
+
+- **机制**：LLM 每次只推理一个步骤 → 上一步推理过程作为 prefix 累积 → 在不改变 prefix 的前提下要求推理下一步骤 → 通过"单步深度 + prefix 累积"避免小模型做长推理的 context 局限
+- **核心洞察**：sub-1B 小模型的"长推理失败"通常不是单步推理能力不够，而是 **长链路 context 超出小模型的注意力容量**。本机制通过"分而治之"——每一步只看"当前 prefix + 一步"而非"全链 context"——让小模型在不损失长度的前提下完成推理
+- **与 Long-CoT 的关键区别**：Long-CoT（业界常见路径）在 1B 模型上有 EMNLP 2025 实证显示**永久退化（-75%）**；本机制通过 prefix 累积避免长 context 一次性输入，规避了这一风险
+- **与循环深度模型（Looped Transformer）的关键区别**：循环深度模型研究的是"单次 forward 内 weight-tying 循环"（Ouro / RELAY），与本项目的"多步宏观循环"研究范畴不同；本项目不采用循环深度模型路径
+
+**两层次自循环的工程支撑**：
+
+| 层次 | 关键工程底座 | 实现位置 |
+|---|---|---|
+| 层次一 | assert 验证器反馈 / ontology 子图查询 / 知识注入 | HydraForge C++ 运行时（外部依赖） |
+| 层次二 | KV cache prefix 复用（多轮间累积） / StreamingLLM（长链路不爆显存） / KIVI（prefix 量化） | [`inference-engine/`](./inference-engine/)（本项目 3 份 CRITICAL 文档） |
+
+> **重要边界**：自循环 ≠ 自举。本项目"自循环"是**单 query 推理的横向结构**（per-step confidence trigger + prefix accumulation），**不是** HydraForge VN-001 的"自举"（4 阶段宏观系统演化路线，硬编码参数 → 可编程策略 → 质量闭环 → 持续自进化）。两者不冲突但概念层级不同。
+
 ---
 
-## 📐 三、技术路径：分阶段演进
+## 📐 三、技术路径：分阶段演进（对齐自循环 + 紧耦合新目标）
 
-###3.1演进路线图
+### 3.1 演进路线图
 
-```
-阶段1 (M1-M2,8 周)阶段2 (M3-M4,8 周)阶段3 (M5-M6,8 周)
-方案 A: Logic-LM范式方案 C:核心层方案 C:完整态
- + GCR范式 + 内化 pretrain +置信度机制
+| 阶段 | 时间 | 范式 | 目标 | 成功标准 |
+|---|---|---|---|---|
+| **阶段 1（M1-M2）** | 8 周 | 紧耦合基础设施 + 1 类认知推理（因果）+ Confidence-Triggered Loop MVP | 验证 sub-1B + 紧耦合 + Confidence Loop 能跑通 | 因果推理 ≥ 60% / 8 项指标 ≥ baseline / 收敛步数 ≤ 3 |
+| **阶段 2（M3-M4）** | 8 周 | Prefix-Accumulation Loop + 第 2-3 类认知推理（规则/时间）+ 内化部分 ontology | 让小模型"真正记住"核心 ontology，并实现"单步深度"长推理 | Prefix-Accumulation 收益 ≥ +10% / 3 类推理 ≥ 70% / 收敛步数 ≤ 2 |
+| **阶段 3（M5-M6）** | 8 周 | 完整 6 类认知推理 + 完整两层自循环 + sub-1B SOTA 对标 | 达到 sub-1B 范围 SOTA | 10 项指标全部达标 / 持平/超越 NL2LOGIC 99% executable / 持平/超越 T5-large ProofWriter 85.4% |
 
-目标:验证 sub-1B目标:真正"内化"目标:完整认知推理
- + ontology ontology 到参数框架
- +外部 solver + KG agent +拒答 +检索
- 可跑通推理 +扩展层
+### 3.2 阶段 1 — 紧耦合基础设施 + Confidence-Triggered Loop MVP
 
-成功标准:成功标准:成功标准:
-≥60% on6 类推理 ≥50% 内化推理准确率7 项指标全部达标
-```
-
-###3.2阶段1（方案 A）— Logic-LM + GCR 双引擎
-
-**目标**：验证 sub-1B + ontology +外部 solver 能跑通
+**目标**：验证 sub-1B + 紧耦合 + Confidence-Triggered Loop 能跑通
 
 **架构**：
 ```
-用户问题
- ↓
-0.5B LLM (符号化 + 本体引用)
- ↓
-符号程序 +实体 +关系指针
- ↓
-外部求解器 (Prover9/Z3/clingo)
- ↓
-求解结果 +解释
- ↓
-0.5B LLM (自然语言回复 +置信度)
+[用户问题]
+    ↓
+[0.5B LLM 生成 AgenticDSL 程序]
+    ↓
+[HydraForge 运行时执行]
+    ↓
+[置信度评估]
+    ↓                       ↘ (达标)
+[assert 验证器反馈] ─────────┐
+    ↓                       │
+[触发 ontology 子图查询]    │
+    ↓                       │
+[知识注入 + 重新推理] ──────┘
+    ↓
+[自然语言回复 + 置信度 + ontology 引用]
 ```
 
 **核心组件**：
-- Base 模型：**Qwen2-0.5B**（已有 sub-1B实证）
-- 本体库：ConceptNet5.5 + WordNet + ATOMIC 子集 + 自建 SWRL规则
--符号求解器：Prover9 + clingo + Z3
--训练范式：Logic-LM风格 SFT — `(NL 问题, Prolog/FOL 程序, solver 输出)`
-- 数据生成：从 ontology axiom → Prolog事实 → GPT-4 生成 NL →求解器验证
+- **Base 模型**：Qwen2-0.5B（已有 sub-1B 实证）
+- **AgenticDSL**：HydraForge AgenticDSL（Markdown + 嵌入式 YAML + 显式签名 + 强制围栏）
+- **紧耦合基础设施**：本项目 [`inference-engine/`](./inference-engine/) 3 份 CRITICAL 文档（预分配 KV cache / StreamingLLM / KIVI）
+- **智能体运行时**：HydraForge C++ 引擎（ILLMProvider + Topological Scheduler + ToolRegistry + BudgetController + OpenTelemetry Trace）
+- **本体库**：ConceptNet5.5 + WordNet + ATOMIC（聚焦 MVP 因果推理所需）
+- **求解器**：Prover9 + clingo + Z3
 
-**成功标准**：在6 类推理的500 测试集上 ≥60%准确率
+**训练范式**：AgenticDSL 自训练（ReSTᴱᴹ → OmegaPRM → MCTS → GRPO）
 
-###3.3阶段2（方案 C核心层）— Neuro-Symbolic 内化
+**成功标准**：
+- 因果推理 ≥ 60% 准确率（500 测试集）
+- 8 项指标 ≥ baseline（前 7 项 + 自循环收敛速度 ≤ 3 步）
+- Confidence-Triggered Loop 收敛步数 ≤ 3
 
-**目标**：让模型"真正记住"核心 ontology（脱外部 solver）
+### 3.3 阶段 2 — Prefix-Accumulation Loop + 规则/时间推理深耕
+
+**目标**：实现"单步深度 + prefix 累积"长推理机制，并扩展到第 2-3 类认知推理
+
+**新增能力**：
+- **Prefix-Accumulation Step-by-Step Loop**：LLM 每次只推理一个步骤 → 上一步推理过程作为 prefix 累积 → 在不改变 prefix 的前提下要求推理下一步骤（详见 §2.5）
+- **第 2-3 类认知推理**：规则/时间推理（SWRL 规则 + OWL-Time）
+- **部分 ontology 内化**：NeurASP / LTN 风格 pretrain（logic satisfaction loss）
+- **KV cache prefix 复用优化**：跨多轮 prefix 累积，StreamingLLM 防止长链路爆显存，KIVI 量化压缩
 
 **架构**：
 ```
-[核心 ontology (50K axioms)]
- ↓ NeurASP/LTN风格 pretrain
- ↓ (logic satisfaction loss)
-0.5B认知模型
- ↓
-用户问题 →0.5B 直接推理（无需外部 solver）
+[用户问题] → [用户问题 + 步骤 1 prefix] → [用户问题 + 步骤 1+2 prefix] → ...
+    ↓              ↓                              ↓
+[LLM 推理 1] → [LLM 推理 2]                → [LLM 推理 N]
+    ↓              ↓                              ↓
+[结果 1]        → [结果 2]                    → [完整推理链]
+    ↓              ↓                              ↓
+[prefix 累积] → [prefix 累积]                 → [最终输出 + 置信度]
 ```
 
+**核心机制**：
+- 每次推理只输入"当前 prefix + 一步"，避免长 context 一次性输入
+- sub-1B 模型在每步推理时仅需关注"当前 prefix + 一步"，绕过长 context 注意力容量瓶颈
+- 与 Long-CoT 关键区别：Long-CoT 在 1B 模型上有 EMNLP 2025 实证显示**永久退化（-75%）**；本机制通过 prefix 累积规避
+
+**成功标准**：
+- Prefix-Accumulation 收益 ≥ +10% （相比同模型 Long-CoT 退化基线）
+- 3 类推理（因果 + 规则/时间 + 任一深耕类）≥ 70% 准确率
+- 收敛步数 ≤ 2
+
+### 3.4 阶段 3 — 完整 6 类认知推理 + 两层自循环 + sub-1B SOTA 对标
+
+**目标**：达到 sub-1B 范围 SOTA
+
 **新增能力**：
-- NeurASP风格 pretrain — ontology axioms → soft logic loss
-- KG agent推理（ToG/PoG范式）
--评测 WebQSP/CWQ KGQA（参考 GCR0.5B baseline26.2）
-
-**成功标准**：核心 ontology 内化后，"无 solver 内化推理"准确率 ≥50%
-
-###3.4阶段3（方案 C完整态）—完整认知推理框架
-
-**目标**：完整置信度机制 +拒答 +扩展层 + Temporal/Causal
+- **完整 6 类认知推理**：依赖、相似、对象联系、语义关系（前 2 阶段未深耕的 4 类）
+- **完整两层自循环**：Confidence-Triggered Loop + Prefix-Accumulation Loop 全场景覆盖
+- **DPO 偏好优化**：正确推理 vs 错误推理 vs 拒答
+- **置信度校准训练**：精确触发 Confidence-Triggered Loop
+- **OWL-Time + ATOMIC 完整接入**
+- **Loreto 序列化扩展 ontology 进 context**
+- **sub-1B SOTA 对标验证**：持平或超越 NL2LOGIC 99% executable / T5-large ProofWriter 85.4% / TinyAgent-1.1B 80.06% function calling
 
 **架构**：
 ```
 用户问题
  ↓
-0.5B认知模型
+0.5B 认知模型（紧耦合 + 两层自循环）
  ├──核心层（参数化）：NeurASP 内化
- ├──扩展层（检索）：Loreto序列化 context
+ ├──扩展层（检索）：Loreto 序列化 context
+ ├──Confidence-Triggered Loop：置信度触发检索
+ ├──Prefix-Accumulation Loop：长链推理
  └──拒答层：置信度阈值决策
  ↓
-自然语言回复 +置信度 + ontology引用
+自然语言回复 + 置信度 + ontology 引用 + SOTA 对标基线
 ```
 
-**新增能力**：
-- DPO偏好优化（正确推理 vs错误推理 vs拒答）
--置信度校准训练
-- OWL-Time + ATOMIC完整接入
-- Loreto序列化扩展 ontology 进 context
-
-**成功标准**：7 项评测指标全部达标
+**成功标准**：
+- 10 项指标全部达标
+- 持平/超越 NL2LOGIC 0.5B-1.5B AST-guided **99% executable** rate（ProofWriter / FOLIO / LogicNLI）
+- 持平/超越 T5-large 770M ProofWriter depth-5 **85.4%**（CWA proof）
+- 持平/超越 TinyAgent-1.1B + ToolRAG **80.06%** function calling
 
 ---
 
@@ -315,6 +373,11 @@ minimind认知推理模型将是：
 |10 | 主路径 | 分阶段演进（A → C） |2026-06-09 |
 |11 |阶段1范围 |6 类全谱覆盖 |2026-06-09 |
 |12 |失败模式预案 |3阶段各自有切回方案 |2026-06-09 |
+|13 |文档目标定义位置 | docs/README.md（顶层 README） |2026-06-09 |
+|14 |核心目标措辞 | 大模型与智能体紧耦合 + <1B 激活参数 + 认知推理 SOTA(双轨 sub-1B) |2026-06-11 |
+|15 |MVP 推理范围 | 6 类保留(长期),M1-M2 优先因果 + 规则/时间(2-3 类深耕) |2026-06-11 |
+|16 |自循环推理技术内涵 | 双层次(Confidence-Triggered Loop + Prefix-Accumulation Step-by-Step Loop) |2026-06-11 |
+|17 |与 HydraForge 边界 | 自举(VN-001)归属 HydraForge,本项目只做自循环推理 |2026-06-11 |
 
 ---
 
