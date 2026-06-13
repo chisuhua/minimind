@@ -553,4 +553,4 @@ deduplicated_data = dedup.fit_transform(sft_data, threshold=0.85)
 ---
 
 **文档版本**: v1.0
-**Owner**: minimind 训练团队
+**Owner**: AgenticMind 训练团队

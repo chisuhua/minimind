@@ -613,4 +613,4 @@ grpo_trainer = GRPOTrainer(
 ---
 
 **文档版本**: v1.0
-**Owner**: minimind 训练团队
+**Owner**: AgenticMind 训练团队
