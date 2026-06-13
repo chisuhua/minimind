@@ -4,6 +4,29 @@
 
 </div>
 
+> ## ⚠️ 项目重命名公告（2026-06-13）
+>
+> **本仓库已从 `minimind` 重命名为 `AgenticMind`**。
+>
+> | 项目代号 | 仓库路径 | 训练链路载体 |
+> |---|---|---|
+> | **AgenticMind**（当前） | `AgenticMind/`（目录）/ GitHub 仓库名 `AgenticMind` | 复用上游 MiniMind 的训练链路（`model/`、`trainer/`、`scripts/`、`dataset/`）|
+>
+> **核心变更**：
+> - 顶层项目代号：**AgenticMind**（与姊妹项目 LatentMind 形成"显式 AgenticDSL ↔ 潜空间推理"对仗）
+> - 项目目标：训练能可靠生成 AgenticDSL 的 LLM，作为认知推理模型 L4 层（AgenticDSL 语言）的核心能力
+> - 完整工作入口：[`/AGENTS.md`](./AGENTS.md)
+> - 项目目标完整定义：[`docs/README.md`](./docs/README.md)
+>
+> **保留说明**：
+> - 上游 MiniMind 项目（jingyaogong/minimind）的所有原始内容（训练链路、模型列表、致谢、引用等）保留在本 README 下半部分，作为历史存档与训练链路载体的依据
+> - 训练代码（`model/model_minimind.py`、`trainer/*`、`scripts/*`、`dataset/*`）保持 fork 自上游的原始命名，不重命名以保留与上游的兼容性
+> - 引用、致谢、HuggingFace/ModelScope 上的 minimind-3 等上游模型保持原状
+>
+> **HuggingFace / ModelScope 模型上传**：当前仓库**未发布任何模型**。后续训练完成的 AgenticMind 模型将以 `agenticmind-X` 命名空间上传。
+
+---
+
 <div align="center">
 
 ![visitors](https://visitor-badge.laobi.icu/badge?page_id=jingyaogong/minimind)
