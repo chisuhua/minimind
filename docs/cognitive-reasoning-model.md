@@ -1,13 +1,13 @@
-# minimind认知推理模型 — 项目目标定义（Project Goal Definition）
+# AgenticMind 认知推理模型 — 项目目标定义（Project Goal Definition）
 
-> **文档定位**：本 README 定义 minimind **认知推理模型**项目的目标、范围、决策与技术路径。是后续所有设计、实现、评测的根本依据。
+> **文档定位**：本 README 定义 **AgenticMind** 认知推理模型项目的目标、范围、决策与技术路径。是后续所有设计、实现、评测的根本依据。
 >
 > **创建日期**：2026-06-09
 > **brainstorming 来源**：与用户多轮对话 + ontology/neuro-symbolic学术调研
 > **关联文档**：
 > - [`reasoning-distillation-survey/`](./references/methodology/reasoning-distillation-survey/) —推理轨迹蒸馏 +迭代推理双方案调研（前序工作,现归入 `references/methodology/`）
 > - [`small-model-reasoning-survey/`](./references/methodology/small-model-reasoning-survey/) —1B推理能力综合调研(现归入 `references/methodology/`)
-> - [`architectures/`](./architectures/) — minimind推理架构 7 轮迭代中的 4 份 DIRECT 主线(00/04b/06/99),其余档案已移入 [`references/historical-architectures/`](./references/historical-architectures/)
+> - [`architectures/`](./architectures/) — AgenticMind 推理架构 7 轮迭代中的 4 份 DIRECT 主线(00/04b/06/99),其余档案已移入 [`references/historical-architectures/`](./references/historical-architectures/)
 > - [`reasoning-sota-critical-eval.md`](./references/methodology/reasoning-sota-critical-eval.md) —推理 SOTA批判性评估(现归入 `references/methodology/`)
 
 ---
@@ -316,7 +316,7 @@
 
 ###7.1学术差异化
 
-minimind认知推理模型将是：
+AgenticMind 认知推理模型将是：
 - **首个公开的 sub-1B 本体论认知推理模型**（vs GCR 仅 KG推理、Logic-LM需大模型）
 - **首个完整"核心内化 +扩展检索 +置信度拒答"sub-1B框架**
 - **首个 sub-1B Temporal/Causal形式化推理实证**（如成功）
@@ -631,4 +631,4 @@ KG 回写流程（重新设计后）：
 
 ---
 
-> **核心承诺**：本项目目标严格对齐 minimind "大道至简"哲学 —— **用最小的模型 + 最严谨的形式化推理**，**实现"知道自己不知道"的认知推理能力**，**而不是用更大的模型堆叠能力**。
+> **核心承诺**：本项目目标严格对齐 AgenticMind "大道至简"哲学 —— **用最小的模型 + 最严谨的形式化推理**，**实现"知道自己不知道"的认知推理能力**，**而不是用更大的模型堆叠能力**。

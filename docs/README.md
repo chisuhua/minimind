@@ -1,6 +1,15 @@
-# minimind文档中心（Documentation Hub）
+# AgenticMind 文档中心（Documentation Hub）
 
-> **本 README用途**：定义 minimind项目的核心目标 —— **认知推理模型（Cognitive Reasoning Model）**，并索引所有相关调研与设计文档。
+> **本 README用途**：定义 **AgenticMind 项目**（代号 `AgenticMind`，仓库目录 `AgenticMind`，fork 自开源 MiniMind 作为训练链路载体）的核心目标 —— **认知推理模型（Cognitive Reasoning Model）**，并索引所有相关调研与设计文档。
+
+---
+
+> 🚪 **新成员入口**
+>
+> - **AI agent / 开发协作者** → 请先读 [`/AGENTS.md`](../AGENTS.md)（工作入口与上下文手册）
+> - **项目负责人 / 决策者** → 本 README → [`cognitive-reasoning-model.md`](./cognitive-reasoning-model.md) → [`architectures/99-final-recommendation.md`](./architectures/99-final-recommendation.md)
+> - **AgenticDSL 训练工程师** → [`agenticdsl-training/`](./agenticdsl-training/) → [`architectures/06-metacognitive-closed-loop.md`](./architectures/06-metacognitive-closed-loop.md)
+> - **新加入成员** → [`/AGENTS.md`](../AGENTS.md)（建立全局观）→ 本 README → [`cognitive-reasoning-model.md`](./cognitive-reasoning-model.md)
 
 ---
 
@@ -81,7 +90,7 @@
 
 ## 🛤️ 技术路径：分阶段演进
 
-**不直接上完整形态**——按 minimind "大道至简"哲学，**每阶段都产生可验证的中间产物**：
+**不直接上完整形态**——按 AgenticMind "大道至简"哲学，**每阶段都产生可验证的中间产物**：
 
 |阶段 | 时间 |范式 |目标 |成功标准 |
 |---|---|---|---|---|
@@ -261,7 +270,7 @@
 
 ---
 
-## 🎓学术差异化（minimind 的"首个"价值）
+## 🎓学术差异化（AgenticMind 的"首个"价值）
 
 1. **首个公开的 sub-1B 本体论认知推理模型**（vs GCR 仅 KG推理、Logic-LM需大模型）
 2. **首个完整"核心内化 +扩展检索 +置信度拒答"sub-1B框架**
@@ -293,4 +302,4 @@
 
 ---
 
-> **核心承诺**：本项目目标严格对齐 minimind "大道至简"哲学 —— **用最小的模型 + 最严谨的形式化推理**，**实现"知道自己不知道"的认知推理能力**，**而不是用更大的模型堆叠能力**。
+> **核心承诺**：本项目目标严格对齐 AgenticMind "大道至简"哲学 —— **用最小的模型 + 最严谨的形式化推理**，**实现"知道自己不知道"的认知推理能力**，**而不是用更大的模型堆叠能力**。
