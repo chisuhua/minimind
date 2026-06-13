@@ -566,4 +566,4 @@ def error_analysis(eval_results):
 ---
 
 **文档版本**: v1.0
-**Owner**: minimind 评估团队
+**Owner**: AgenticMind 评估团队

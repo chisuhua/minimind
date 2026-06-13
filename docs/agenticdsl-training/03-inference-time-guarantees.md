@@ -10,9 +10,9 @@
 
 ---
 
-## 1. 推荐技术栈（minimind 部署视角）
+## 1. 推荐技术栈（AgenticMind 部署视角）
 
-基于 2024-2026 SOTA 调研，minimind 部署 AgenticDSL 生成模型的推荐技术栈：
+基于 2024-2026 SOTA 调研，AgenticMind 部署 AgenticDSL 生成模型的推荐技术栈：
 
 | 层 | 选型 | 关键参数 |
 |---|---|---|
@@ -524,4 +524,4 @@ print(f"Free: {np.mean([r['format_valid'] for r in results['free']])}")
 ---
 
 **文档版本**: v1.0
-**Owner**: minimind 部署团队
+**Owner**: AgenticMind 部署团队
