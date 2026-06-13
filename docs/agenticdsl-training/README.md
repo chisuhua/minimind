@@ -12,7 +12,7 @@
 
 本文档树聚焦 **"如何训练一个 LLM 可靠地生成、修复、续写、验证 AgenticDSL"**——是 AgenticDSL 语言演进提案（HydraForge 仓）的**训练侧**配套。
 
-**目标读者**：minimind 团队的 LLM 训练工程师、SFT/RL 工程师、数据工程师。
+**目标读者**：AgenticMind 团队的 LLM 训练工程师、SFT/RL 工程师、数据工程师。
 
 **不在本文档范围**：
 - AgenticDSL 语言演进提案 → 见 HydraForge 仓
@@ -137,12 +137,12 @@ HydraForge 的 AgenticDSL **完全可以作为 LLM 的训练目标语言**，并
 | **特殊 Token 注册**（vocab surgery）| HydraForge 仓 | Tokenizer 是语言基础设施的一部分 |
 | **Canonical Serializer** | HydraForge 仓 | 序列化是解析的镜像，属于语言层 |
 | **FIM 数据格式定义** | HydraForge 仓 | 是 token + 序列化组合 |
-| **9 阶段数据生成管线** | minimind 仓 `01-training-data-pipeline.md` | 是训练数据工程 |
-| **6 阶段训练算法 Recipe** | minimind 仓 `02-training-algorithms.md` | 是训练算法 |
-| **XGrammar + vLLM 推理栈** | minimind 仓 `03-inference-time-guarantees.md` | 是推理时基础设施（minimind 部署视角） |
-| **HydraForgeBench 设计** | minimind 仓 `04-evaluation-benchmark.md` | 是评估流程 |
-| **风险登记册** | minimind 仓 `05-risk-register.md` | 是训练项目风险 |
-| **VN-001 对齐** | minimind 仓 `06-vn001-alignment.md` | 是训练路线与 HydraForge 自举的整合 |
+| **9 阶段数据生成管线** | AgenticMind 仓 `01-training-data-pipeline.md` | 是训练数据工程 |
+| **6 阶段训练算法 Recipe** | AgenticMind 仓 `02-training-algorithms.md` | 是训练算法 |
+| **XGrammar + vLLM 推理栈** | AgenticMind 仓 `03-inference-time-guarantees.md` | 是推理时基础设施（AgenticMind 部署视角） |
+| **HydraForgeBench 设计** | AgenticMind 仓 `04-evaluation-benchmark.md` | 是评估流程 |
+| **风险登记册** | AgenticMind 仓 `05-risk-register.md` | 是训练项目风险 |
+| **VN-001 对齐** | AgenticMind 仓 `06-vn001-alignment.md` | 是训练路线与 HydraForge 自举的整合 |
 
 ---
 
@@ -162,4 +162,4 @@ HydraForge 的 AgenticDSL **完全可以作为 LLM 的训练目标语言**，并
 ---
 
 **文档版本**: v1.0
-**Owner**: minimind 训练团队
+**Owner**: AgenticMind 训练团队

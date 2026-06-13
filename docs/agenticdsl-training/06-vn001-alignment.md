@@ -478,7 +478,7 @@ class IncrementalTrainingTrigger:
 
 ### 6.1 与 BOOT-001 的并行关系
 
-| 周期 | BOOT-001（HydraForge 自举）| TR（minimind 训练）| 交付物 |
+| 周期 | BOOT-001（HydraForge 自举）| TR（AgenticMind 训练）| 交付物 |
 |---|---|---|---|
 | **Week 1-2** | 任务 0.1：CloudLLMAdapter | TR-1 M0: Grammar + Tokenizer | EBNF rules + special tokens |
 | **Week 3-4** | 任务 0.2：云端推理工具注册 | TR-1 M1: 数据管线 v1 | 50K SFT 数据 + 4 层验证器 |
@@ -492,7 +492,7 @@ class IncrementalTrainingTrigger:
 
 ### 6.2 关键里程碑对齐
 
-| 里程碑 | 时间 | HydraForge 自举 | minimind 训练 |
+| 里程碑 | 时间 | HydraForge 自举 | AgenticMind 训练 |
 |---|---|---|---|
 | **云端集成完成** | W2 | CloudLLMAdapter 可用 | Tokenizer 就绪 |
 | **推理标准库就位** | W6 | engine/model/session.md | HydraForge-AgenticDSL-7B-v1 |
@@ -560,4 +560,4 @@ class IncrementalTrainingTrigger:
 ---
 
 **文档版本**: v1.0
-**Owner**: minimind + HydraForge 协同
+**Owner**: AgenticMind + HydraForge 协同

@@ -99,7 +99,7 @@
 
 **采纳建议**：
 - **采纳方向**，但调整配比
-- 详见 minimind 仓 [`01-training-data-pipeline.md`](01-training-data-pipeline.md) §1
+- 详见 AgenticMind 仓 [`01-training-data-pipeline.md`](01-training-data-pipeline.md) §1
 
 ### 3.6 建议 6：注册特殊 Token
 
@@ -127,7 +127,7 @@
 **采纳建议**：
 - **完全采纳**
 - 推荐 **XGrammar-2** + Structural Tag（2026 SOTA，arXiv:2601.04426）
-- 详见 minimind 仓 [`03-inference-time-guarantees.md`](03-inference-time-guarantees.md)
+- 详见 AgenticMind 仓 [`03-inference-time-guarantees.md`](03-inference-time-guarantees.md)
 
 ### 3.8 建议 8：确定性序列化
 
@@ -292,9 +292,9 @@
 
 **HydraForge AgenticDSL 应作为 LLM 训练的"Agent 领域 WASM"** —— 不取代 GPT-4/Claude，而是成为 HydraForge 生态的专用推理后端。
 
-训练路线（minimind 仓）+ 语言演进（HydraForge 仓）+ 自举愿景（VN-001）三位一体，14-20 周内可完成端到端闭环。
+训练路线（AgenticMind 仓）+ 语言演进（HydraForge 仓）+ 自举愿景（VN-001）三位一体，14-20 周内可完成端到端闭环。
 
 ---
 
 **文档版本**: v1.0
-**Owner**: minimind + HydraForge 协同
+**Owner**: AgenticMind + HydraForge 协同

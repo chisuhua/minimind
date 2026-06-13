@@ -296,4 +296,4 @@ if re_st_em_iter > 5:
 ---
 
 **文档版本**: v1.0
-**Owner**: minimind 训练团队
+**Owner**: AgenticMind 训练团队
