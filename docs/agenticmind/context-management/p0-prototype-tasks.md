@@ -1,5 +1,10 @@
 # P0 原型任务清单 — 抽取系统 v1 实施(interim 方案)
 
+> **勘误(2026-08-25)**:本文档是 P0 原型规划(已归档),已被 [`../../agenticmemory_training/08c-p1-minimum-loop.md`](../../agenticmemory_training/08c-p1-minimum-loop.md) 取代。
+> - 文档中 `context_extraction/` 路径均为旧规划;实际共享契约代码在 `agenticmind/extraction/`
+> - 训练侧代码(P1 骨架)在 `agenticmemory_training/{data,training}/`
+> - 保留本文档仅作历史参考,不再执行
+
 > **文档 ID**: CM-003-PROTOTYPE
 > **生成日期**: 2026-08-24
 > **状态**: 草案 v0.2(关键路径调整:T1.3/T1.4 改 interim 方案)

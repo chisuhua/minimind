@@ -39,6 +39,8 @@
 
 **目标读者**:AgenticMind 抽取系统架构师、P0 原型开发者、v2 HydraForge 编排开发者。
 
+> **v0.2.1 边界声明(2026-08-25)**:本文档只描述**运行时编排**。**P1 训练管线(数据合成→教师标注→LoRA 微调)归属于训练侧,见 [`../../agenticmemory_training/08c-p1-minimum-loop.md`](../../agenticmemory_training/08c-p1-minimum-loop.md)**。两侧通过共享契约 `agenticmind/extraction/`(schemas/validator/privacy)解耦,训练脚本位于 `agenticmemory_training/` 包,不放本架构的编排代码。运行时编排代码待 P2 落 `agenticmind_runtime/`(预留)。
+
 ---
 
 ## 1. 核心结论(架构骨架)

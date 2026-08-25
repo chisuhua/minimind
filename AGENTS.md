@@ -559,10 +559,26 @@ final reward = 0.4 * L1_format + 0.2 * L2_signature + 0.3 * L3_execution + 0.1 *
 
 **Owner**:AgenticMind 训练团队
 
+#### F-05：代码包归属与目录对齐方案 ✅ 已决策（2026-08-25）
+
+| 维度 | 选择 | 备注 |
+|---|---|---|
+| **共享契约层** | `agenticmind/extraction/`（schemas / validator / privacy） | 训练侧与运行时侧共用,不放任何训练或编排代码 |
+| **训练侧代码** | `agenticmemory_training/`（data / training 子模块） | 与 `docs/agenticmemory_training/` 目录一一对应;P1 骨架全部在此 |
+| **运行时代码（预留）** | `agenticmind_runtime/`（未创建） | P2 运行时编排实现落此,对应 `docs/agenticmind/context-management/` |
+| **数据输出路径** | `data/agenticmemory_training/v0/` | 与训练包同名,避免"代码包名≠数据目录名" |
+
+**动机**:P1 骨架 6 个训练脚本最初误放在 `agenticmind/{data,training}`,本质属于训练侧。归属按"主要服务对象"判定,而非"是否被多域使用"。仅 `extraction/` 真正属于共享层。
+
+**关联文档**:
+- `docs/agenticmemory_training/08c-p1-minimum-loop.md`（P1 架构与执行指南,MEMDATA-008C）
+- `docs/agenticmind/context-management/architecture.md`（CM-002 加 v0.2.1 边界声明）
+- 迁移 commit:`baf13c4`（代码）、`515533c`（文档）
+
+**Owner**:AgenticMind 训练团队
+
 ---
 
-**版本**：v1.1(新增 F-04)
-**最后更新**:2026-08-24
-**Owner**：AgenticMind 训练团队
-**最后更新**：2026-06-13
+**版本**：v1.2(新增 F-05)
+**最后更新**:2026-08-25
 **Owner**：AgenticMind 训练团队
