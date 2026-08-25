@@ -1,18 +1,47 @@
-# P1 最小闭环实验 — 使用流程与执行指南
+# P1 最小闭环实验 — 架构与执行指南
 
-> **文档 ID**: CM-004-P1-GUIDE
+> **文档 ID**: MEMDATA-008C-P1-LOOP
 > **生成日期**: 2026-08-25
-> **状态**: 草案 v0.1(随骨架产出)
-> **配套代码**: `agenticmind/` (extraction / data / training 三大模块)
+> **状态**: 草案 v0.1(随骨架产出,由 CM-004-P1-GUIDE 迁移 + 合并架构节)
+> **配套代码**:
+> - `agenticmemory_training/`(训练侧:data / training 模块)
+> - `agenticmind/extraction/`(共享契约:schemas / validator / privacy)
 > **配套文档**:
 > - `README.md` — 综述
-> - `mvp-schema.md` — 13 字段人工 schema 单一真源
-> - `architecture.md` — 编排架构(参考)
-> - `p0-prototype-tasks.md` — 已被 P1 取代的 P0 任务清单(归档)
+> - `08a-capacity-gap-design.md` — Capacity Gap 设计
+> - `08b-seed-schema-fusion.md` — Schema 融合边界
+> - `../agenticmind/context-management/mvp-schema.md` — 13 字段人工 schema 单一真源
+> - `../agenticmind/context-management/architecture.md` — 运行时编排架构(与本文档解耦)
 
 ---
 
-## 0. 一句话目标
+## 0. 包结构与归属(v0.1 架构节新增)
+
+**P1 骨架代码归属两个包,与文档目录一一对应**:
+
+```
+agenticmind/                         # 共享契约层(训练侧 + 运行时侧共用)
+└── extraction/                      # schemas(13 字段) / validator / privacy
+
+agenticmemory_training/              # 训练侧(P1 全部,见本文档)
+├── data/                            # P1-1 数据合成 / P1-2 教师标注 / P1-3 评估
+└── training/                        # P1-4 LoRA 微调 / 字段级 F1
+
+# 未来(预留)
+agenticmind_runtime/                 # 运行时编排(P2,未创建)
+```
+
+**关键边界**:
+- `agenticmind/extraction/` 由训练侧和运行时侧**共享消费**,不放任何训练或编排代码
+- `agenticmemory_training/` 只服务训练数据蒸馏与微调,**与运行时编排无耦合**
+- 共享契约依据 `../agenticmind/context-management/mvp-schema.md` §3 定义
+- 运行时编排架构见 `../agenticmind/context-management/architecture.md`,**不在此文档范围**
+
+**执行注意**:以下所有导入均指 `agenticmemory_training.*`(不再是 `agenticmind.data/training`)。
+
+---
+
+## 0b. 一句话目标
 
 **用 2 周 +1 人 + ~$50,实证回答项目核心赌注**——"sub-1B 模型能否学会 13 字段结构化抽取"。
 
@@ -127,11 +156,11 @@ mkdir -p data/public/
 # 4. 用脚手架加载(实际加载逻辑需按数据集 schema 适配)
 python3 -c "
 from pathlib import Path
-from agenticmind.data.synthesis import load_public_dataset, write_conversations
+from agenticmemory_training.data.synthesis import load_public_dataset, write_conversations
 
 # 假设 sharely.jsonl 已经是 JSONL 格式
 convs = load_public_dataset('sharely', Path('data/public/sharely.jsonl'), limit=30)
-count = write_conversations(convs, Path('data/agenticmind/v0/conversations.jsonl'))
+count = write_conversations(convs, Path('data/agenticmemory_training/v0/conversations.jsonl'))
 print(f'已加载 {count} 条公开集对话')
 "
 ```
@@ -142,7 +171,7 @@ print(f'已加载 {count} 条公开集对话')
 # scripts/synthesize_gpt4.py
 from openai import OpenAI
 from pathlib import Path
-from agenticmind.data.synthesis import synthesize_via_gpt4, write_conversations
+from agenticmemory_training.data.synthesis import synthesize_via_gpt4, write_conversations
 
 client = OpenAI()
 convs = synthesize_via_gpt4(
@@ -150,7 +179,7 @@ convs = synthesize_via_gpt4(
     model="gpt-4o",
     n_conversations=70,
 )
-count = write_conversations(convs, Path("data/agenticmind/v0/conversations.jsonl"), append=True)
+count = write_conversations(convs, Path("data/agenticmemory_training/v0/conversations.jsonl"), append=True)
 print(f"已合成 {count} 条")
 ```
 
@@ -162,11 +191,11 @@ python3 scripts/synthesize_gpt4.py
 ### 3.3 验收
 
 ```bash
-wc -l data/agenticmind/v0/conversations.jsonl
+wc -l data/agenticmemory_training/v0/conversations.jsonl
 # 预期:50-100 条(公开集 30 + 合成 70)
 
 # 检查格式
-head -1 data/agenticmind/v0/conversations.jsonl | python3 -m json.tool
+head -1 data/agenticmemory_training/v0/conversations.jsonl | python3 -m json.tool
 # 预期:含 session_id / source / turns[](每条 turn 有 role + text)
 ```
 
@@ -194,17 +223,17 @@ head -1 data/agenticmind/v0/conversations.jsonl | python3 -m json.tool
 # scripts/label_teacher.py
 from openai import OpenAI
 from pathlib import Path
-from agenticmind.data.synthesis import load_jsonl_iter
-from agenticmind.data.teacher_labeling import label_sessions
+from agenticmemory_training.data.synthesis import load_jsonl_iter
+from agenticmemory_training.data.teacher_labeling import label_sessions
 
 client = OpenAI()  # 默认读 OPENAI_API_KEY
-conversations = load_jsonl_iter(Path("data/agenticmind/v0/conversations.jsonl"))
+conversations = load_jsonl_iter(Path("data/agenticmemory_training/v0/conversations.jsonl"))
 
 count = label_sessions(
     client=client,
     conversations=conversations,
     model="deepseek-chat",  # 或 gpt-4o
-    output_path=Path("data/agenticmind/v0/session_extract_v0.jsonl"),
+    output_path=Path("data/agenticmemory_training/v0/session_extract_v0.jsonl"),
 )
 print(f"已标注 {count} 个 turn")
 ```
@@ -218,11 +247,11 @@ python3 scripts/label_teacher.py             # 实际标注
 ### 4.3 验收
 
 ```bash
-wc -l data/agenticmind/v0/session_extract_v0.jsonl
+wc -l data/agenticmemory_training/v0/session_extract_v0.jsonl
 # 预期:约 5 × 100 = 500 turns(每对话 5 轮)
 
 # 检查格式
-head -1 data/agenticmind/v0/session_extract_v0.jsonl | python3 -m json.tool
+head -1 data/agenticmemory_training/v0/session_extract_v0.jsonl | python3 -m json.tool
 # 预期:含 session_id / turn_index / intent / entities / language / current_topic / session_facts
 ```
 
@@ -249,16 +278,16 @@ head -1 data/agenticmind/v0/session_extract_v0.jsonl | python3 -m json.tool
 ```python
 # scripts/evaluate.py
 from pathlib import Path
-from agenticmind.data.evaluation import (
+from agenticmemory_training.data.evaluation import (
     load_annotations,
     evaluate,
     report_to_markdown,
 )
 
-annotations = list(load_annotations(Path("data/agenticmind/v0/session_extract_v0.jsonl")))
+annotations = list(load_annotations(Path("data/agenticmemory_training/v0/session_extract_v0.jsonl")))
 report = evaluate(annotations)
 
-output = Path("data/agenticmind/v0/findings_v0.md")
+output = Path("data/agenticmemory_training/v0/findings_v0.md")
 output.write_text(report_to_markdown(report), encoding="utf-8")
 print(f"评估报告已写入:{output}")
 
@@ -313,10 +342,10 @@ entities.type 未触发的类型:
 #### Step 4a:数据准备
 
 ```bash
-python3 -m agenticmind.training.data_prep \
-  --annotations data/agenticmind/v0/session_extract_v0.jsonl \
-  --output-train data/agenticmind/v0/train.jsonl \
-  --output-dev data/agenticmind/v0/dev.jsonl \
+python3 -m agenticmemory_training.training.data_prep \
+  --annotations data/agenticmemory_training/v0/session_extract_v0.jsonl \
+  --output-train data/agenticmemory_training/v0/train.jsonl \
+  --output-dev data/agenticmemory_training/v0/dev.jsonl \
   --max-context-turns 8 \
   --dev-ratio 0.1
 ```
@@ -329,9 +358,9 @@ python3 -m agenticmind.training.data_prep \
 export TEACHER_MODEL_PATH="Qwen/Qwen2.5-0.5B"  # 或本地路径
 export TOKENIZERS_PARALLELISM=false
 
-python3 -m agenticmind.training.lora_train \
-  --train-jsonl data/agenticmind/v0/train.jsonl \
-  --dev-jsonl data/agenticmind/v0/dev.jsonl \
+python3 -m agenticmemory_training.training.lora_train \
+  --train-jsonl data/agenticmemory_training/v0/train.jsonl \
+  --dev-jsonl data/agenticmemory_training/v0/dev.jsonl \
   --output-dir runs/lora_v0 \
   --base-model "$TEACHER_MODEL_PATH" \
   --epochs 3 \
@@ -349,10 +378,10 @@ python3 -m agenticmind.training.lora_train \
 #### Step 4c:Dev Set F1 评估
 
 ```bash
-python3 -m agenticmind.training.eval_f1 \
+python3 -m agenticmemory_training.training.eval_f1 \
   --base-model "$TEACHER_MODEL_PATH" \
   --adapter-dir runs/lora_v0 \
-  --dev-jsonl data/agenticmind/v0/dev.jsonl \
+  --dev-jsonl data/agenticmemory_training/v0/dev.jsonl \
   --output-dir runs/lora_v0
 ```
 
@@ -402,11 +431,11 @@ python3 -m agenticmind.training.eval_f1 \
 
 | 文件 | 来源步骤 | 用途 |
 |---|---|---|
-| `data/agenticmind/v0/conversations.jsonl` | P1-1 | 输入对话(50-100 条) |
-| `data/agenticmind/v0/session_extract_v0.jsonl` | P1-2 | 教师标注(~500 turns) |
-| `data/agenticmind/v0/train.jsonl` | P1-4a | LoRA 训练样本(~450 条) |
-| `data/agenticmind/v0/dev.jsonl` | P1-4a | 评估样本(~50 条) |
-| `data/agenticmind/v0/findings_v0.md` | P1-3 | schema 可行性报告 |
+| `data/agenticmemory_training/v0/conversations.jsonl` | P1-1 | 输入对话(50-100 条) |
+| `data/agenticmemory_training/v0/session_extract_v0.jsonl` | P1-2 | 教师标注(~500 turns) |
+| `data/agenticmemory_training/v0/train.jsonl` | P1-4a | LoRA 训练样本(~450 条) |
+| `data/agenticmemory_training/v0/dev.jsonl` | P1-4a | 评估样本(~50 条) |
+| `data/agenticmemory_training/v0/findings_v0.md` | P1-3 | schema 可行性报告 |
 | `runs/lora_v0/adapter_model.safetensors` | P1-4b | LoRA 权重(~10MB) |
 | `runs/lora_v0/dev_f1.json` | P1-4c | 各字段 F1 指标 |
 | `runs/lora_v0/dev_predictions.jsonl` | P1-4c | 详细预测 vs gold |
@@ -458,28 +487,31 @@ python3 -m agenticmind.training.eval_f1 \
 ## 10. 完整目录结构
 
 ```
-agenticmind/                           # 代码骨架(已 commit)
+agenticmind/                           # 共享契约层(已 commit)
 ├── __init__.py
-├── extraction/                         # P1-0
-│   ├── schemas.py                      # 13 字段 dataclass
-│   ├── validator.py                    # SchemaValidator
-│   ├── privacy.py                      # SecretDetector + PIIRedactor
-│   └── __init__.py
+└── extraction/                         # P1-0
+    ├── schemas.py                      # 13 字段 dataclass
+    ├── validator.py                    # SchemaValidator
+    ├── privacy.py                      # SecretDetector + PIIRedactor
+    └── __init__.py
+└── tests/
+    ├── test_extraction.py              # 33 测试
+    └── __init__.py
+
+agenticmemory_training/                 # 训练侧(P1 全部,已 commit)
+├── __init__.py
 ├── data/                               # P1-1~P1-3
 │   ├── synthesis.py                    # 公开集 + GPT-4 合成
 │   ├── teacher_labeling.py             # 13 字段提取 prompt
 │   ├── evaluation.py                   # fill rate + 一致性 + 偏置
 │   └── __init__.py
-├── training/                           # P1-4
-│   ├── data_prep.py                    # samples + train/dev split
-│   ├── lora_train.py                   # peft + Qwen2.5-0.5B
-│   ├── eval_f1.py (字段级 F1)
-│   └── __init__.py
-└── tests/
-    ├── test_extraction.py              # 33 测试
+└── training/                           # P1-4
+    ├── data_prep.py                    # samples + train/dev split
+    ├── lora_train.py                   # peft + Qwen2.5-0.5B
+    ├── eval_f1.py                      # 字段级 F1
     └── __init__.py
 
-data/agenticmind/v0/                    # P1 实际数据(执行时产生)
+data/agenticmemory_training/v0/                    # P1 实际数据(执行时产生)
 ├── conversations.jsonl                # P1-1 输出
 ├── session_extract_v0.jsonl            # P1-2 输出
 ├── train.jsonl                          # P1-4a 输出
@@ -502,7 +534,7 @@ runs/lora_v0/                           # P1-4 输出
 
 ---
 
-**文档版本**:v0.1
+**文档版本**:v0.2(架构节合并 + 包路径迁移)
 **Owner**:AgenticMind 最小闭环实验组
 **最后更新**:2026-08-25
-**配套 commit**:`4bb5d20 feat(agenticmind): P1 最小闭环实验骨架(schemas + 6 脚本)`
+**配套 commit**:`baf13c4 refactor: P1 骨架迁移到 agenticmemory_training/ 包`
