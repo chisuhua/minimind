@@ -7,6 +7,8 @@
 > - 核心能力契约: [`01-memory-model.md`](01-memory-model.md)
 > - 评估框架: [`03-evaluation.md`](03-evaluation.md)
 > - 训练侧实现: [`../agenticmemory_training/`](../agenticmemory_training/) — 数据合成 + 蒸馏 + LoRA 微调
+>   - [`../agenticmemory_training/08a-capacity-gap-design.md`](../agenticmemory_training/08a-capacity-gap-design.md) — 双盲 OpenIE 提取 + CCS 分层公式 + 探针架构(本文档 §3 的四元组来源 + §6 样本筛选)
+>   - [`../agenticmemory_training/08d-wiki-dag-construction.md`](../agenticmemory_training/08d-wiki-dag-construction.md) — Wiki DAG 8 字段构建(本文档 §6.2 Type A/D 输出目标)
 
 ---
 
@@ -15,6 +17,12 @@
 本文档定义 **agenticmemory 记忆模型的训练设计**——三层训练信号的原理、六类训练样本的类型、四阶段课程的配比、损失函数的设计。
 
 **边界规则**:本文档只描述**训练设计意图和原理**;具体的实现步骤、脚本、配置在 [`../agenticmemory_training/`](../agenticmemory_training/) 中(用户确认 2026-08-25 Wiki DAG 构建放训练侧)。
+
+**与训练侧实现的衔接**:
+- 本文 §6 六类样本输出"完整 Wiki 页面"→ 由 [`../agenticmemory_training/08d-wiki-dag-construction.md`](../agenticmemory_training/08d-wiki-dag-construction.md) 定义 8 字段 JSON Schema 作为 ground truth 格式
+- 本文 §3 三层训练信号的"原文"输入 → 由 [`../agenticmemory_training/08a-capacity-gap-design.md`](../agenticmemory_training/08a-capacity-gap-design.md) Phase 1 双盲 OpenIE 提取产出四元组池
+- 本文 §6.1 六类样本的"记忆层/推理层/混合层"分配 → 由 [`../agenticmemory_training/08a-capacity-gap-design.md`](../agenticmemory_training/08a-capacity-gap-design.md) §4.4 CCS 公式(`0.5·gap + 0.3·recon + 0.2·bottleneck`)与阈值(memory < 0.3 / reasoning > 0.7)决定
+- 探针架构(0.6B 崩溃对照 + 1.7B 主探针)由 08a §3.1 定义,与本文档**解耦**:本文档只描述"用探针做什么",不描述"探针怎么选"
 
 **高级训练范式**:本文档聚焦基础训练设计。**本体涌现**(V1-V3 路线图)、**OpenIE + 聚类**、**信息瓶颈 + 重构损失**、**双系统架构**等高级范式详见 [`05-schema-emergence.md`](05-schema-emergence.md)。
 
