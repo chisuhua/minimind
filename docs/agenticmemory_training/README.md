@@ -49,10 +49,16 @@
 | **08** | `08-memory-distillation-pipeline.md` | RTX 4090 单卡实操搭建指南（v1.1，含完整代码与配置） |
 | **08a** | `08a-capacity-gap-design.md` | v0.1 设计方案（理论层 + 设计层决策表附录 A） |
 
-> **注**：文档保留"08 / 08a"编号是为了：
+> **注**：文档保留"08 / 08a / 08b / 08c / 08d"编号是为了：
 > 1. 与 `../agenticdsl-training/` 编号体系保持视觉一致性（两者是"姊妹"目录）
-> 2. 文档 ID（`LLMTRN-008-MEMDIST` / `LLMTRN-008A-MEMDIST-DESIGN`）已稳定使用
+> 2. 文档 ID（`LLMTRN-008-MEMDIST` / `LLMTRN-008A-MEMDIST-DESIGN` 等）已稳定使用
 > 3. 文档内大量引用以"§X.X"形式锚定，重命名会破坏所有锚点
+>
+> **2026-08-26 重命名评估结论**:
+> - **不建议重命名**为 01-06（与 `docs/agenticmemory/` 一致）
+> - **破坏范围**:30+ 处跨文档交叉引用、文档 ID 体系、commit 历史追溯
+> - **收益评估有限**:`docs/agenticdsl-training/` 也用 01-06 编号,重命名并不能实现"全部 01-XX 一致"
+> - **替代方案**:新文档继续顺延（08d 已于 2026-08-26 新建,后续 09/09a 顺延）;新成员阅读时由本文档 §2 解释编号沿用原因
 
 ---
 
@@ -146,16 +152,22 @@
 
 ## 8. 风险登记摘要
 
-| # | 风险 | 状态 |
-|---|------|------|
-| R-01 | CCS 阈值误分类 | 监控中（每季度验证集重校准）|
-| R-02 | 教师 API 成本失控 | 每日 ¥50 硬上限 + 告警；超出后切回本地 1.7B |
-| R-03 | HDBSCAN 聚类不稳定 | 多次运行取交集 |
-| R-04 | 灰色地带样本流失 | 人工审核队列（每周抽样 200 条标注）|
-| R-05 | 0.6B 上限 | schema 总数 ≤ 200 关系 / 50 实体 |
-| R-06 | Schema 漂移 | 锁定 schema_version，变更走 PR review |
-| R-07 | 冷启动校准失效 | 多样性采样 + 200 条人工标注验证 |
-| R-08 | 灰色地带样本流失 | 比例监控 + 优先级队列 |
+| # | 风险 | 状态 | 架构侧对应 |
+|---|------|------|------|
+| R-01 | CCS 阈值误分类 | 监控中(每季度验证集重校准)| [`../agenticmemory/08-risk-register.md`](../agenticmemory/08-risk-register.md) R-C02(五步漏斗判定错误) |
+| R-02 | 教师 API 成本失控 | 每日 ¥50 硬上限 + 告警;超出后切回本地 1.7B | [`../agenticmemory/08-risk-register.md`](../agenticmemory/08-risk-register.md) R-E03(数据合成管线成本) |
+| R-03 | HDBSCAN 聚类不稳定 | 多次运行取交集 | [`../agenticmemory/08-risk-register.md`](../agenticmemory/08-risk-register.md) R-S02(Schema 漂移) |
+| R-04 | 灰色地带样本流失 | 人工审核队列(每周抽样 200 条标注)| [`../agenticmemory/08-risk-register.md`](../agenticmemory/08-risk-register.md) R-T06(训练配比敏感) |
+| R-05 | 0.6B 上限 | schema 总数 ≤ 200 关系 / 50 实体 | [`../agenticmemory/08-risk-register.md`](../agenticmemory/08-risk-register.md) R-T04(1B 模型能力上限) |
+| R-06 | Schema 漂移 | 锁定 schema_version,变更走 PR review | [`../agenticmemory/08-risk-register.md`](../agenticmemory/08-risk-register.md) R-E04(Schema 融合边界) |
+| R-07 | 冷启动校准失效 | 多样性采样 + 200 条人工标注验证 | [`../agenticmemory/08-risk-register.md`](../agenticmemory/08-risk-register.md) R-C02 |
+| R-08 | 灰色地带样本流失 | 比例监控 + 优先级队列 | [`../agenticmemory/08-risk-register.md`](../agenticmemory/08-risk-register.md) R-T06 |
+
+**单一真源原则**(2026-08-26 双向索引建立):
+- **架构级风险**(能力边界 / 训练配比 / 部署回归):[`../agenticmemory/08-risk-register.md`](../agenticmemory/08-risk-register.md) 25 项
+- **数据工程级风险**(CCS / HDBSCAN / Schema 漂移 / 灰色地带):本节 8 项
+- **R-C01**(Wiki DAG 构建算法)→ [`08d-wiki-dag-construction.md` §5](08d-wiki-dag-construction.md) 待解决清单 O1.1/O1.2/O1.3
+- 新增风险时先确认归属,再登记到对应文档,**避免双副本**
 
 详见 [`08` §十六](08-memory-distillation-pipeline.md) 与 [`08a` §9](08a-capacity-gap-design.md)。
 
