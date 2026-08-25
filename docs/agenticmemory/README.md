@@ -175,7 +175,7 @@
 | **评估方法论(Probe Model + Golden Filter)** | [`06-evaluation-methodology.md`](06-evaluation-methodology.md) | 是评估方法论 |
 | **生产部署(数据飞轮 + 监控 + 增量更新)** | [`07-production-deployment.md`](07-production-deployment.md) | 是部署架构 |
 | **风险集中管理(所有风险登记)** | [`08-risk-register.md`](08-risk-register.md) | 是风险真源 |
-| **Wiki DAG 构建算法** | `docs/agenticmemory_training/` | 与 08a Phase 3 紧耦合,放训练侧(用户确认 2026-08-25) |
+| **Wiki DAG 构建算法** | [`docs/agenticmemory_training/08d-wiki-dag-construction.md`](../agenticmemory_training/08d-wiki-dag-construction.md) | **新建 08d**(v0.1, 2026-08-26);与 08a Phase 1(OpenIE 提取)接续,**不是 08a Phase 3 Schema 涌现**(详见 08d §0 边界澄清) |
 | **训练数据合成 SOP** | `docs/agenticmemory_training/` | 已有,不变 |
 | **13 字段人工 schema** | `docs/agenticmind/context-management/mvp-schema.md` | 人工 schema 真源,不变 |
 | **LoRA 训练脚本** | `agenticmemory_training/training/` | 已有 P1 骨架,扩展即可 |
@@ -185,7 +185,7 @@
 
 **关键边界规则**:
 1. **agenticmemory 只负责 prefill + probe**,不负责 consumer 的下游逻辑
-2. **Wiki DAG 构建放 training 侧**(`agenticmemory_training/`),运行时 consumer 不感知(用户确认 2026-08-25)
+2. **Wiki DAG 构建放 training 侧**([`../agenticmemory_training/08d-wiki-dag-construction.md`](../agenticmemory_training/08d-wiki-dag-construction.md), 2026-08-26 新建),运行时 consumer 不感知(用户确认 2026-08-25)
 3. **LoRA 是 agenticmemory 的一部分**,但训练数据由 consumer 侧定义
 4. **层次化 KV 是 agenticmemory 的内部实现**,对 consumer 透明
 5. **训练设计原理在 `docs/agenticmemory/`**,具体实现在 `agenticmemory_training/`,**不重复**
@@ -282,14 +282,14 @@ MVP(当前):
 |---|---|---|
 | agenticmemory 形态 | KV 缓存为产品 + 多 LoRA 探针 | 用户澄清 2026-08-25 |
 | 核心能力定义 | 推理无损(B/A ≥ 0.98) | 替代逐字复述方案 |
-| Wiki DAG 构建位置 | `agenticmemory_training/` | 与 08a Phase 3 紧耦合 |
+| Wiki DAG 构建位置 | [`../agenticmemory_training/08d-wiki-dag-construction.md`](../agenticmemory_training/08d-wiki-dag-construction.md) | **新建 08d**(v0.1, 2026-08-26);承接 08a Phase 1 的 OpenIE 四元组池,与 08a Phase 3(Schema 涌现)平行而非紧耦合 |
 | prefix radix 实施 | MVP 新增组件 | 多 consumer 共享前缀 |
 | 文档集结构 | 7 个文档(README + 6 个详细文档) | 增加对话扩展、本体涌现、评估方法论 |
 | **对话输入支持** | **轮次分块 + 增量更新(O(1) per turn)** | **长对话必须增量,不能全量重算** |
 | **对话边界** | **记忆模型不涉及对话管理/用户画像/技能复用** | **目标函数保持单一(推理无损)** |
 | **MQP 协议扩展** | **MQP v3 新增 5 类对话查询(指代/约束/更新/意图/时间锚定)** | **覆盖对话特有查询需求** |
 | **对话训练样本** | **新增 Type J-N 5 类对话特化样本** | **在原 Type A-I 基础上扩展** |
-| **schema 来源** | **双轨:人工 schema(消费方)+ 涌现 schema(记忆侧)** | **消费方需稳定契约,记忆侧需自主发现** |
+| **schema 来源** | **双轨:人工 schema(消费方)+ 涌现 schema(记忆侧)** | **消费方需稳定契约,记忆侧需自主发现**(涌现 schema 流程见 [`../agenticmemory_training/08a-capacity-gap-design.md`](../agenticmemory_training/08a-capacity-gap-design.md) D-04「HDBSCAN + LLM 概念化(混合)」,融合边界见 [`../agenticmemory_training/08b-seed-schema-fusion.md`](../agenticmemory_training/08b-seed-schema-fusion.md)) |
 | **本体涌现范式** | **OpenIE + 信息瓶颈 + RL + 动态演化** | **四种范式互补,详见 [`05-schema-emergence.md`](05-schema-emergence.md)** |
 | **训练路线** | **V1.0 宽进严出 → V2.0 重构剪枝 → V3.0 RL 涌现** | **由 [`05-schema-emergence.md`](05-schema-emergence.md) §3 定义** |
 | **双系统架构** | **记忆轨(1B-3B)+ 推理轨(7B-14B)按能力差自动分层** | **详见 [`05-schema-emergence.md`](05-schema-emergence.md) §4** |
@@ -306,7 +306,7 @@ MVP(当前):
 **立即执行(本周)**:
 1. 用户 review 本文档集,确认架构方向
 2. 更新 `AGENTS.md` §12,新增 F-06(agenticmemory 架构决策)
-3. 更新 `docs/agenticmemory_training/08c-p1-minimum-loop.md`,加入 Wiki DAG 构建任务
+3. 在 `docs/agenticmemory_training/` 范围内,Wiki DAG 构建任务由新建的 [`08d-wiki-dag-construction.md`](../agenticmemory_training/08d-wiki-dag-construction.md)(v0.1)承载,**不放入 08c**(08c 是 P1 13 字段 schema 抽取实验,与 Wiki DAG 无业务关系)
 
 **MVP 启动前(下周)**:
 4. 细化 Wiki DAG 构建算法(O1,待解决)
