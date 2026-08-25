@@ -8,8 +8,14 @@
 > - 训练数据管线: [`../agenticdsl-training/01-training-data-pipeline.md`](../agenticdsl-training/01-training-data-pipeline.md)
 > - 训练算法: [`../agenticdsl-training/02-training-algorithms.md`](../agenticdsl-training/02-training-algorithms.md)
 > - RTX 4090 实操搭建指南: [`08-memory-distillation-pipeline.md`](08-memory-distillation-pipeline.md)
+> - **Wiki DAG 构建契约**(2026-08-26 新建,与本文档平行): [`08d-wiki-dag-construction.md`](08d-wiki-dag-construction.md)
 > - 元认知闭环: [`../architectures/06-metacognitive-closed-loop.md`](../architectures/06-metacognitive-closed-loop.md)
 > - 上游语言规范: HydraForge 仓 `/docs/agenticdsl/llm-training-design/SOTA-DESIGN.md`
+>
+> **上游契约(决定本文档输入/输出)**:
+> - 训练设计原理(六类样本 + 三层训练信号 + 四阶段课程): [`../agenticmemory/02-training-design.md`](../agenticmemory/02-training-design.md) §3 / §6 / §7
+> - 记忆模型核心契约(五步漏斗): [`../agenticmemory/01-memory-model.md`](../agenticmemory/01-memory-model.md) §3
+> - 本文档 Phase 2 的 CCS 公式服务于 02-training-design §6.1 样本分层;本文档 Phase 1 的 OpenIE 输出是 02-training-design §3.3 Wiki 维度的四元组来源
 
 ---
 
