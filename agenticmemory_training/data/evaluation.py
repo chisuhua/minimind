@@ -346,9 +346,9 @@ def main() -> None:
     parser.add_argument(
         "--input",
         type=Path,
-        default=Path("data/agenticmind/v0/session_extract_v0.jsonl"),
+        default=Path("data/agenticmemory_training/v0/session_extract_v0.jsonl"),
     )
-    parser.add_argument("--output", type=Path, default=Path("data/agenticmind/v0/findings_v0.md"))
+    parser.add_argument("--output", type=Path, default=Path("data/agenticmemory_training/v0/findings_v0.md"))
     parser.add_argument(
         "--multi-run",
         action="store_true",

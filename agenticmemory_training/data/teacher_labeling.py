@@ -265,12 +265,12 @@ def main() -> None:
 
     parser = argparse.ArgumentParser(description="P1-2 教师标注 CLI(stub)")
     parser.add_argument(
-        "--input", type=Path, default=Path("data/agenticmind/v0/conversations.jsonl")
+        "--input", type=Path, default=Path("data/agenticmemory_training/v0/conversations.jsonl")
     )
     parser.add_argument(
         "--output",
         type=Path,
-        default=Path("data/agenticmind/v0/session_extract_v0.jsonl"),
+        default=Path("data/agenticmemory_training/v0/session_extract_v0.jsonl"),
     )
     parser.add_argument("--model", default="deepseek-chat")
     parser.add_argument("--api-key", default=None)

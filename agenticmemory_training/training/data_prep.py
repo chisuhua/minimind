@@ -142,13 +142,13 @@ def main() -> None:
 
     parser = argparse.ArgumentParser(description="P1-4 数据准备 CLI(stub)")
     parser.add_argument(
-        "--annotations", type=Path, default=Path("data/agenticmind/v0/session_extract_v0.jsonl")
+        "--annotations", type=Path, default=Path("data/agenticmemory_training/v0/session_extract_v0.jsonl")
     )
     parser.add_argument(
-        "--output-train", type=Path, default=Path("data/agenticmind/v0/train.jsonl")
+        "--output-train", type=Path, default=Path("data/agenticmemory_training/v0/train.jsonl")
     )
     parser.add_argument(
-        "--output-dev", type=Path, default=Path("data/agenticmind/v0/dev.jsonl")
+        "--output-dev", type=Path, default=Path("data/agenticmemory_training/v0/dev.jsonl")
     )
     parser.add_argument("--max-context-turns", type=int, default=8)
     parser.add_argument("--dev-ratio", type=float, default=0.1)

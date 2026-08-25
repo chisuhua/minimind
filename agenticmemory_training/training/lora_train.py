@@ -4,9 +4,9 @@
     pip install peft transformers accelerate bitsandbytes
     export TEACHER_MODEL_PATH=/path/to/Qwen3-0.6B  # 或 Qwen2.5-0.5B 临时替代
     export TOKENIZERS_PARALLELISM=false
-    python -m agenticmind.training.lora_train \
-        --train-jsonl data/agenticmind/v0/train.jsonl \
-        --dev-jsonl data/agenticmind/v0/dev.jsonl \
+    python -m agenticmemory_training.training.lora_train \
+        --train-jsonl data/agenticmemory_training/v0/train.jsonl \
+        --dev-jsonl data/agenticmemory_training/v0/dev.jsonl \
         --output-dir runs/lora_v0 \
         --epochs 3
 
@@ -233,10 +233,10 @@ def train(
 def main() -> None:
     parser = argparse.ArgumentParser(description="P1-4 LoRA 训练 CLI(需 peft)")
     parser.add_argument(
-        "--train-jsonl", type=Path, default=Path("data/agenticmind/v0/train.jsonl")
+        "--train-jsonl", type=Path, default=Path("data/agenticmemory_training/v0/train.jsonl")
     )
     parser.add_argument(
-        "--dev-jsonl", type=Path, default=Path("data/agenticmind/v0/dev.jsonl")
+        "--dev-jsonl", type=Path, default=Path("data/agenticmemory_training/v0/dev.jsonl")
     )
     parser.add_argument("--output-dir", type=Path, default=Path("runs/lora_v0"))
     parser.add_argument(

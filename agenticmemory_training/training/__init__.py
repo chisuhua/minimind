@@ -1,4 +1,4 @@
-"""agenticmind.training 模块(P1-4:LoRA 微调)
+"""agenticmemory_training.training 模块(P1-4:LoRA 微调)
 
 子模块:
 - data_prep.py   把 P1-2 标注转成训练格式

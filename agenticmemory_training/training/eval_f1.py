@@ -284,7 +284,7 @@ def main() -> None:
     parser = argparse.ArgumentParser(description="P1-4 dev F1 评估 CLI")
     parser.add_argument("--base-model", default="Qwen/Qwen2.5-0.5B")
     parser.add_argument("--adapter-dir", type=Path, default=Path("runs/lora_v0"))
-    parser.add_argument("--dev-jsonl", type=Path, default=Path("data/agenticmind/v0/dev.jsonl"))
+    parser.add_argument("--dev-jsonl", type=Path, default=Path("data/agenticmemory_training/v0/dev.jsonl"))
     parser.add_argument("--output-dir", type=Path, default=Path("runs/lora_v0"))
     args = parser.parse_args()
 

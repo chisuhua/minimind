@@ -296,7 +296,7 @@ def main() -> None:
 
     parser = argparse.ArgumentParser(description="P1-1 数据合成 CLI(stub)")
     parser.add_argument("--source", choices=["public", "synthetic", "mixed"], default="mixed")
-    parser.add_argument("--output", type=Path, default=Path("data/agenticmind/v0/conversations.jsonl"))
+    parser.add_argument("--output", type=Path, default=Path("data/agenticmemory_training/v0/conversations.jsonl"))
     parser.add_argument("--limit", type=int, default=100)
     parser.add_argument("--openai-key", default=None)
     args = parser.parse_args()

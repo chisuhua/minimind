@@ -1,4 +1,4 @@
-"""agenticmind.data 数据合成与教师标注模块(P1-1~P1-3 准备)
+"""agenticmemory_training.data 数据合成与教师标注模块(P1-1~P1-3 准备)
 
 子模块:
 - synthesis.py    P1-1: 数据合成(公开集 + GPT-4 合成)
