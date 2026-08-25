@@ -7,8 +7,9 @@
 > - 架构总览: [`README.md`](README.md)
 > - 训练设计: [`02-training-design.md`](02-training-design.md)
 > - 评估框架: [`03-evaluation.md`](03-evaluation.md)
-> - Wiki DAG 构建实现: [`../agenticmemory_training/08a-capacity-gap-design.md`](../agenticmemory_training/08a-capacity-gap-design.md) §3-5
-> - Wiki Schema 实现: [`../agenticmemory_training/08b-seed-schema-fusion.md`](../agenticmemory_training/08b-seed-schema-fusion.md)
+> - Wiki DAG 构建实现: [`../agenticmemory_training/08d-wiki-dag-construction.md`](../agenticmemory_training/08d-wiki-dag-construction.md)(v0.1, 2026-08-26 新建,与本文档 §5-6 完全对齐;承接 08a Phase 1 的 OpenIE 四元组池)
+> - Schema 涌现(与 Wiki DAG 平行): [`../agenticmemory_training/08a-capacity-gap-design.md`](../agenticmemory_training/08a-capacity-gap-design.md) Phase 3
+> - Schema 融合边界: [`../agenticmemory_training/08b-seed-schema-fusion.md`](../agenticmemory_training/08b-seed-schema-fusion.md)
 
 ---
 
@@ -301,7 +302,7 @@ Step 3b: 领域规则检查
 | `sources` | 来源引用(ref, span, confidence) | §6.7 |
 | `completeness_metadata` | 完整性自报告(irr_estimate, flagged_for_reasoning_model) | §6.8 |
 
-**完整 JSON Schema** 见 [`../agenticmemory_training/08a-capacity-gap-design.md`](../agenticmemory_training/08a-capacity-gap-design.md) §5.4 与本文档 §6。
+**完整 JSON Schema** 见 [`../agenticmemory_training/08d-wiki-dag-construction.md`](../agenticmemory_training/08d-wiki-dag-construction.md) §2 与本文档 §6(08d 与本文档 §6 完全对齐,08d 是镜像 + 构建算法骨架)。
 
 ### 5.4 Wiki DAG 的三种验证用途
 
@@ -485,7 +486,7 @@ Step 3b: 领域规则检查
 |---|---|---|
 | **核心能力(推理无损)** | 本文 §1 | — |
 | **能力边界判定(五步漏斗)** | 本文 §3 | [`../agenticmemory_training/08a-capacity-gap-design.md`](../agenticmemory_training/08a-capacity-gap-design.md) §4 |
-| **Wiki DAG 构建** | 本文 §5-6(契约) | 训练侧实现:`../agenticmemory_training/`(用户确认 2026-08-25) |
+| **Wiki DAG 构建** | 本文 §5-6(契约) | 训练侧实现:[`../agenticmemory_training/08d-wiki-dag-construction.md`](../agenticmemory_training/08d-wiki-dag-construction.md)(v0.1, 2026-08-26 新建;承接 08a Phase 1 的 OpenIE 四元组池,用户确认 2026-08-25) |
 | **训练样本与课程** | 见 [`02-training-design.md`](02-training-design.md) | — |
 | **评估方法** | 见 [`03-evaluation.md`](03-evaluation.md) | — |
 | **架构分层(L0-L3)** | 见 [`README.md`](README.md) §1 | — |
@@ -498,7 +499,7 @@ Step 3b: 领域规则检查
 
 | # | 问题 | 状态 | 建议决策时机 |
 |---|---|---|---|
-| O1 | Wiki DAG 构建的具体算法(节点去重、边合并、层级推断) | 🔴 **待解决** | P1 启动前必须决策 |
+| O1 | Wiki DAG 构建的具体算法(节点去重 O1.1、边合并 O1.2、层级推断 O1.3,见 [`../agenticmemory_training/08d-wiki-dag-construction.md`](../agenticmemory_training/08d-wiki-dag-construction.md) §3.3 + §5) | 🔴 **待解决** | P1 启动前必须决策 |
 | O2 | LoRA 探针的评估指标(如何衡量"提取了正确视角") | 🔴 **待解决** | P1 启动前必须决策 |
 | **O7** | **irr_estimate 的具体计算方法**(模型自评 vs 教师评 vs 综合) | 🟡 待讨论 | P1 训练启动前 |
 | **O8** | **`needs_reasoning_model_verification` 的触发阈值**(confidence < 多少?推理深度 ≥ 多少?) | 🟡 待讨论 | P1 训练启动前 |
