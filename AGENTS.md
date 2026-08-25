@@ -20,7 +20,11 @@
 | `docs/agenticdsl-training/` | ✅ | TR-1/2/3 路线、训练算法、超参规范修订 |
 | `docs/agenticmind/context-management/` | ✅ | 13 字段 schema / OrchestratorInterface / P0 任务清单修订 |
 
-**跳过 AGENTS.md 的目录**（由 root 或兄弟目录覆盖）：`scripts/`、`dataset/`、`docs/architectures/`、`docs/inference-engine/`、`docs/agenticmemory_training/`（与代码侧同名目录对称，由代码侧覆盖）、`docs/references/`（调研档案）。
+**跳过 AGENTS.md 的目录**（由 root 或兄弟目录覆盖）：
+- `scripts/`、`dataset/` — 工具/数据集目录,无独立设计文档
+- `docs/architectures/`、`docs/inference-engine/` — 由 [`docs/README.md`](docs/README.md) 顶层索引
+- `docs/agenticmemory_training/`(2026-08-26 修订说明) — **与代码侧 `agenticmemory_training/` 同名对称,但文档侧独立承担 6 份设计文档**:`README.md`(综述)+ `08`(实操)+ `08a`(Capacity Gap 设计)+ `08b`(Schema 融合)+ `08c`(P1 验证)+ **`08d`(Wiki DAG 构建契约,2026-08-26 新建)**。该目录虽无独立 AGENTS.md,但内容级别为"架构设计"而非"代码实现",由 [`docs/agenticmemory/` 文档集](docs/agenticmemory/README.md) 与代码侧 [`agenticmemory_training/AGENTS.md`](agenticmemory_training/AGENTS.md) 双向引用
+- `docs/references/` — 调研档案,由 [`docs/README.md`](docs/README.md) §📚 参考目录索引
 
 ---
 
