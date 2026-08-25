@@ -64,12 +64,14 @@ HydraForge 的 AgenticDSL **完全可以作为 LLM 的训练目标语言**，并
 |---|---|---|
 | **00** | `README.md`（本文）| 综述、决策清单、与 HydraForge 仓的边界 |
 | **01** | `training-data-pipeline.md` | 9 阶段数据生成管线、200K SFT 数据、7 层课程、4 层验证器 |
-| **02** | `training-algorithms.md` | 6 阶段自训练 Recipe（ReSTᴱᴹ → OmegaPRM → MCTS → GRPO → SPIN） |
+| **02** | `training-algorithm.md` | 6 阶段自训练 Recipe（ReSTᴱᴹ → OmegaPRM → MCTS → GRPO → SPIN） |
 | **03** | `inference-time-guarantees.md` | XGrammar-2 + vLLM + Tree-sitter 推理栈、约束解码 |
 | **04** | `evaluation-benchmark.md` | HydraForgeBench 设计、8 个评估维度 |
 | **05** | `risk-register.md` | 12 个关键风险 + 防 Goodhart 协议 |
 | **06** | `vn001-alignment.md` | 与 VN-001 自举愿景的对齐路径 |
 | **07** | `07-vs-initial-analysis.md` | 与初步分析的差异对照 |
+
+> **相关姊妹目录**：基于 Capacity Gap 的记忆蒸馏管线（用于构建本训练链路所需的"记忆"数据集）已迁移至独立子目录 [`../agenticmemory_training/`](../agenticmemory_training/)。该目录是本目录 `01-training-data-pipeline.md` 第 3 阶段（执行驱动过滤）的**前置数据预处理**——产出 `memory_train.jsonl` + `schema_v*.json` 后再喂入本目录训练。详见 [`../agenticmemory_training/README.md`](../agenticmemory_training/README.md) §9 衔接说明。
 
 ---
 

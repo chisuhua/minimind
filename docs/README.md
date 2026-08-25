@@ -215,6 +215,16 @@
 | [`agenticdsl-training/06-vn001-alignment.md`](./agenticdsl-training/06-vn001-alignment.md) | ⭐⭐ | 与 **HydraForge VN-001 愿景**对齐路径(HydraForge 的"自举"是 4 阶段宏观路线,**非本项目目标**) |
 | [`agenticdsl-training/07-vs-initial-analysis.md`](./agenticdsl-training/07-vs-initial-analysis.md) | ⭐⭐ | 与初步分析差异对照 |
 
+### 💾 记忆训练数据集构建(DIRECT · 技术系列 A.5)
+
+> **目录**:[`agenticmemory_training/`](./agenticmemory_training/) —— 3 份,为 AgenticDSL 训练链路**前置构建记忆数据集**(Capacity Gap 自动分层 + Schema 自动涌现)。产出物喂给 [`agenticdsl-training/01-training-data-pipeline.md`](./agenticdsl-training/01-training-data-pipeline.md) 第 3 阶段。
+
+| 文档 | 关联度 | 内容 |
+|---|---|---|
+| [`agenticmemory_training/README.md`](./agenticmemory_training/README.md) | ⭐⭐ | 记忆训练数据集构建综述（与 `agenticdsl-training/` 的边界） |
+| [`agenticmemory_training/08-memory-distillation-pipeline.md`](./agenticmemory_training/08-memory-distillation-pipeline.md) | ⭐⭐ | RTX 4090 单卡实操搭建指南（v1.1，含完整代码与配置） |
+| [`agenticmemory_training/08a-capacity-gap-design.md`](./agenticmemory_training/08a-capacity-gap-design.md) | ⭐⭐ | v0.1 设计方案（理论/决策层，含附录 A 设计层决策表 13 项） |
+
 ### 🏗️ 推理架构(DIRECT · 技术系列 B)
 
 > **目录**:[`architectures/`](./architectures/) —— 4 份,推理架构 7 轮迭代中提取的 DIRECT 主线。

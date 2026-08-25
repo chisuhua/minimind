@@ -378,6 +378,10 @@ reward = 0.4 * format + 0.2 * signature + 0.3 * execution + 0.1 * task
 - `docs/agenticdsl-training/04-evaluation-benchmark.md` — HydraForgeBench 设计
 - `docs/agenticdsl-training/05-risk-register.md` — 风险登记册
 - `docs/agenticdsl-training/06-vn001-alignment.md` — 与 HydraForge VN-001 对齐
+- `docs/agenticmind/context-management/README.md` — **会话上下文抽取系统综述**（v0.1.1 草案，2026-08-24）
+- `docs/agenticmind/context-management/mvp-schema.md` — MVP 字段集（13 字段：6 业务字段 + 4 横切元数据类型 + session_id/turn_index 标识，详见 v0.1.1 §1 唯一真源表）
+- `docs/agenticmind/context-management/architecture.md` — Python(v1)→ HydraForge(v2) 可演进编排架构
+- `docs/agenticmind/context-management/p0-prototype-tasks.md` — P0 原型任务清单（3-4 周端到端验证）
 - `docs/architectures/06-metacognitive-closed-loop.md` — 元认知闭环（自循环核心）
 - `docs/inference-engine/` — 自循环推理的关键基础设施
 
@@ -537,8 +541,28 @@ final reward = 0.4 * L1_format + 0.2 * L2_signature + 0.3 * L3_execution + 0.1 *
 **差异来源**：两处都标"自己规划"，但未对齐。推荐以 `agenticdsl-training/README.md` 为准（这是训练团队文档）。
 **待决策**。
 
+#### F-04：上下文抽取双 Schema 源统一消费方案 ✅ 已决策（2026-08-24）
+
+| 维度 | 选择 | 备注 |
+|---|---|---|
+| **Schema 融合边界** | **Schema 层分离 + 数据集层联合 + 模型层多任务** | 自动涌现 schema (`schema_memory_v*.json`) 与人工 schema (`mvp-schema.md`) 在 schema 层互不污染,通过 task tag 在训练数据层联合 |
+| **可参与涌现锚定的字段** | **仅 `entities` 的 9 种类型** | 其余 12 字段(intent/topic/facts/横切元数据)只从对话语料产生,不参与自动涌现 |
+| **模型选型** | **Qwen3-0.6B base + 双 LoRA**（或单多任务 SFT） | 对齐 08a D-10 tokenizer 硬约束(Qwen3 系列);同一 base 支持两种 task(`session_extract` / `memory_extract`) |
+| **运行时抽取实现** | **interim:教师 API + 规则;统一模型就绪后替换** | P0 阶段不训练独立小模型;编排层(OrchestratorInterface + 4 级降级)价值保留,与抽取器实现解耦 |
+| **消费方** | **统一:同一个智能体消费同一个模型的两种 task 输出** | 不再分"训练消费方 / 运行时消费方" |
+
+**关键洞察**:用户原话"消费方是一样的,都是先构建训练数据集 → 训练一个小模型 → 运行时智能体消费" → 统一小模型同时承担两个 task,但**两份 schema 保持分离**(字段级融合是范畴错误,详见 [`docs/agenticmemory_training/08b-seed-schema-fusion.md`](docs/agenticmemory_training/08b-seed-schema-fusion.md))。
+
+**关联文档**:
+- 新建 `docs/agenticmemory_training/08b-seed-schema-fusion.md`(Schema 融合边界规范)
+- 更新 `docs/agenticmind/context-management/` 下 4 个文档到 v0.2(角色升级 + 统一模型)
+
+**Owner**:AgenticMind 训练团队
+
 ---
 
-**版本**：v1.0
+**版本**：v1.1(新增 F-04)
+**最后更新**:2026-08-24
+**Owner**：AgenticMind 训练团队
 **最后更新**：2026-06-13
 **Owner**：AgenticMind 训练团队
