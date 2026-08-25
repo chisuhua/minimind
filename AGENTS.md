@@ -9,6 +9,21 @@
 
 ---
 
+## 0. 子目录导航（分层 AGENTS.md 索引）
+
+| 子目录 | AGENTS.md | 何时查阅 |
+|---|---|---|
+| `agenticmind/extraction/` | ✅ | 13 字段 schema / validator / secret 检测的契约层改动 |
+| `agenticmemory_training/` | ✅ | P1-1~P1-4 蒸馏管线 + LoRA 训练脚本改动 |
+| `trainer/` | ✅ | 选择 / 修改 / 新增训练算法脚本 |
+| `model/` | ✅ | 模型架构 / 推理加速模块改动 |
+| `docs/agenticdsl-training/` | ✅ | TR-1/2/3 路线、训练算法、超参规范修订 |
+| `docs/agenticmind/context-management/` | ✅ | 13 字段 schema / OrchestratorInterface / P0 任务清单修订 |
+
+**跳过 AGENTS.md 的目录**（由 root 或兄弟目录覆盖）：`scripts/`、`dataset/`、`docs/architectures/`、`docs/inference-engine/`、`docs/agenticmemory_training/`（与代码侧同名目录对称，由代码侧覆盖）、`docs/references/`（调研档案）。
+
+---
+
 ## 1. 一句话目标
 
 > **在 <1B 激活参数下，训练一个 LLM，使其能可靠地生成、修复、续写、验证 AgenticDSL，并通过两层次自循环推理实现认知推理 SOTA。**
