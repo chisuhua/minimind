@@ -7,7 +7,7 @@
 > - `mvp-schema.md` — 13 字段人工 schema 单一真源(本架构的契约对象)
 > - `p0-prototype-tasks.md` — P0 原型任务清单(interim 方案)
 > - [`../../agenticmemory_training/08b-seed-schema-fusion.md`](../../agenticmemory_training/08b-seed-schema-fusion.md) — Schema 融合边界规范
-> - [`../agenticdsl-training/06-vn001-alignment.md`](../agenticdsl-training/06-vn001-alignment.md) — HydraForge VN-001 自举愿景
+> - [`../../agenticdsl-training/06-vn001-alignment.md`](../../agenticdsl-training/06-vn001-alignment.md) — HydraForge VN-001 自举愿景
 
 > **v0.2 重定位记录**:
 > - §3.2 LocalExtractorPool 从"3 个独立 0.5B 模型"重写为"统一 Qwen3-0.6B base + 双 LoRA + task tag"(对齐 [`../../agenticmemory_training/08b-seed-schema-fusion.md`](../../agenticmemory_training/08b-seed-schema-fusion.md) §4)

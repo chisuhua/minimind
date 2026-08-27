@@ -21,7 +21,7 @@
 
 本文档树聚焦 **"会话交互 schema 真源 + 推理时会话管理智能体消费规范"**——为 AgenticMind 项目提供:
 
-- **训练侧**:13 字段人工 schema 的单一真源,被 [`../agenticmemory_training/`](../agenticmemory_training/) 蒸馏管线的自动涌现流程锚定
+- **训练侧**:13 字段人工 schema 的单一真源,被 [`../../agenticmemory_training/`](../../agenticmemory_training/) 蒸馏管线的自动涌现流程锚定
 - **推理侧**:训练后统一模型的会话管理输出格式规范 + 智能体消费 API
 
 **与上下游的关系**:
@@ -54,10 +54,10 @@
 - 运行时工程师:把 13 字段作为智能体 prompt 组装的输入格式
 
 **不在本文档范围**:
-- 自动涌现算法本身 → 见 [`../agenticmemory_training/08a-capacity-gap-design.md`](../agenticmemory_training/08a-capacity-gap-design.md)
-- Schema 融合边界 → 见 [`../agenticmemory_training/08b-seed-schema-fusion.md`](../agenticmemory_training/08b-seed-schema-fusion.md)
+- 自动涌现算法本身 → 见 [`../../agenticmemory_training/08a-capacity-gap-design.md`](../../agenticmemory_training/08a-capacity-gap-design.md)
+- Schema 融合边界 → 见 [`../../agenticmemory_training/08b-seed-schema-fusion.md`](../../agenticmemory_training/08b-seed-schema-fusion.md)
 - AgenticDSL 语言规范 → 见 HydraForge 仓
-- LLM 训练算法 → 见 [`../agenticdsl-training/`](../agenticdsl-training/)
+- LLM 训练算法 → 见 [`../../agenticdsl-training/`](../../agenticdsl-training/)
 
 ---
 
@@ -67,7 +67,7 @@
 
 **3 个关键锁定**(经 Oracle 评审 + 用户确认):
 
-1. **Schema 层分离**:`mvp-schema.md`(13 字段,冻结契约)与 `schema_memory_v*.json`(自动涌现,可演化)**互不污染**,通过 task tag 在训练数据层联合(详见 [`../agenticmemory_training/08b-seed-schema-fusion.md`](../agenticmemory_training/08b-seed-schema-fusion.md) §1)
+1. **Schema 层分离**:`mvp-schema.md`(13 字段,冻结契约)与 `schema_memory_v*.json`(自动涌现,可演化)**互不污染**,通过 task tag 在训练数据层联合(详见 [`../../agenticmemory_training/08b-seed-schema-fusion.md`](../../agenticmemory_training/08b-seed-schema-fusion.md) §1)
 2. **统一模型**:**Qwen3-0.6B base + 双 LoRA**(或单多任务),覆盖记忆抽取与会话抽取两个 task(详见 `08b` §4)
 3. **运行时消费规范**:`OrchestratorInterface` 抽象 + 4 级降级阶梯(FULL/KEEP_CORE/MINIMAL/RAW_PASSTHROUGH)仍适用,确保 hot path 不崩(详见 `architecture.md`)
 
@@ -131,11 +131,11 @@
 | 内容 | 归属 | 理由 |
 |---|---|---|
 | **13 字段人工 schema 定义** | 本目录 `mvp-schema.md` | 是人工契约真源 |
-| **自动涌现算法(HDBSCAN + LLM 概念化)** | `../agenticmemory_training/08a-capacity-gap-design.md` | 是数据合成算法 |
-| **Schema 融合边界** | `../agenticmemory_training/08b-seed-schema-fusion.md` | 是双方协同规范 |
-| **`memory_train.jsonl` 合成** | `../agenticmemory_training/08-memory-distillation-pipeline.md` | 是文档抽取训练数据 |
+| **自动涌现算法(HDBSCAN + LLM 概念化)** | `../../agenticmemory_training/08a-capacity-gap-design.md` | 是数据合成算法 |
+| **Schema 融合边界** | `../../agenticmemory_training/08b-seed-schema-fusion.md` | 是双方协同规范 |
+| **`memory_train.jsonl` 合成** | `../../agenticmemory_training/08-memory-distillation-pipeline.md` | 是文档抽取训练数据 |
 | **`session_train.jsonl` 合成** | 本目录(待建 `session-train-data-synthesis.md`)| 是会话抽取训练数据,需新建 |
-| **统一模型训练** | `../agenticmemory_training/`(待建 `08c-unified-model-training.md`)| 是双 LoRA / 多任务 SFT |
+| **统一模型训练** | `../../agenticmemory_training/`(待建 `08c-unified-model-training.md`)| 是双 LoRA / 多任务 SFT |
 
 **关键边界规则**:
 - 13 字段中**只有 `entities` 的 9 种类型**可参与自动涌现锚定
@@ -199,7 +199,7 @@
 | R4 | 端到端延迟 >500ms | 🟡 中 | 批处理 + 模型并行 + 缓存 |
 | R5 | 字段 confidence 普遍偏低 | 🟡 中 | temperature scaling + reject option |
 | R6 | HydraForge runtime 未交付阻塞 v2 | 🟢 低 | v1 不依赖,无影响 |
-| **R7** | **schema 融合边界被误解(字段级合并)** | 🟡 中 | 详见 [`../agenticmemory_training/08b-seed-schema-fusion.md`](../agenticmemory_training/08b-seed-schema-fusion.md) |
+| **R7** | **schema 融合边界被误解(字段级合并)** | 🟡 中 | 详见 [`../../agenticmemory_training/08b-seed-schema-fusion.md`](../../agenticmemory_training/08b-seed-schema-fusion.md) |
 | **R8** | **统一模型双 LoRA 切换延迟 > 50ms** | 🟡 中 | 待 Phase 2 验证;超标则改多任务单权重 |
 
 ---
@@ -208,10 +208,10 @@
 
 | 读者 | 推荐阅读路径 |
 |---|---|
-| **新加入成员** | 本 README → [`../agenticmemory_training/08b-seed-schema-fusion.md`](../agenticmemory_training/08b-seed-schema-fusion.md) → `mvp-schema.md` → `architecture.md` |
+| **新加入成员** | 本 README → [`../../agenticmemory_training/08b-seed-schema-fusion.md`](../../agenticmemory_training/08b-seed-schema-fusion.md) → `mvp-schema.md` → `architecture.md` |
 | **P0 原型开发者(interim)** | 本 README → `p0-prototype-tasks.md` → `mvp-schema.md` §3 |
-| **架构师** | [`../agenticmemory_training/08b-seed-schema-fusion.md`](../agenticmemory_training/08b-seed-schema-fusion.md) → `architecture.md` → `mvp-schema.md` §4-5 |
-| **训练数据工程师** | `mvp-schema.md` §3 → [`../agenticmemory_training/08b-seed-schema-fusion.md`](../agenticmemory_training/08b-seed-schema-fusion.md) §3 |
+| **架构师** | [`../../agenticmemory_training/08b-seed-schema-fusion.md`](../../agenticmemory_training/08b-seed-schema-fusion.md) → `architecture.md` → `mvp-schema.md` §4-5 |
+| **训练数据工程师** | `mvp-schema.md` §3 → [`../../agenticmemory_training/08b-seed-schema-fusion.md`](../../agenticmemory_training/08b-seed-schema-fusion.md) §3 |
 | **Prompt 模板维护者** | `mvp-schema.md` §3 → `architecture.md` §4 → 待创建 `prompt-template.md` |
 | **项目负责人 / 决策者** | 本 README §1 + §2 + §7 即可 |
 
