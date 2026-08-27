@@ -7,7 +7,7 @@
 > - 综述: [`README.md`](README.md)
 > - 设计稿: [`08a-capacity-gap-design.md`](08a-capacity-gap-design.md)
 > - 搭建指南: [`08-memory-distillation-pipeline.md`](08-memory-distillation-pipeline.md)
-> - 人工 schema 真源: [`../context-management/mvp-schema.md`](../context-management/mvp-schema.md)
+> - 人工 schema 真源: [`../agenticmind/context-management/mvp-schema.md`](../agenticmind/context-management/mvp-schema.md)
 
 ---
 

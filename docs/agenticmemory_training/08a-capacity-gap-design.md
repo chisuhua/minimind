@@ -109,7 +109,7 @@
 
 ## 2. Phase 0:语料准备与领域自适应基线校准
 
-> **v1.2 实现指引**:Phase 0 实操见 [`08-memory-distillation-pipeline.md` §四](../../agenticmemory_training/08-memory-distillation-pipeline.md)。本文档只保留设计原理。
+> **v1.2 实现指引**:Phase 0 实操见 [`08-memory-distillation-pipeline.md` §四](08-memory-distillation-pipeline.md)。本文档只保留设计原理。
 
 ### 2.1 语料采集与清洗
 
@@ -139,7 +139,7 @@ Step 4: 后续所有 Capacity Gap 判断均基于此校准后的基线
 
 ## 3. Phase 1:双盲 OpenIE 提取
 
-> **v1.2 实现指引**:Phase 1 实操见 [`08-memory-distillation-pipeline.md` §五](../../agenticmemory_training/08-memory-distillation-pipeline.md)。本文档只保留设计原理。
+> **v1.2 实现指引**:Phase 1 实操见 [`08-memory-distillation-pipeline.md` §五](08-memory-distillation-pipeline.md)。本文档只保留设计原理。
 
 ### 3.1 模型选型
 
@@ -177,7 +177,7 @@ Step 4: 后续所有 Capacity Gap 判断均基于此校准后的基线
 - 5 类字段(subject / relation / object / confidence / evidence_span)
 - 3 条要求(完整提取 / 动词短语关系 / 原文标准表述)
 
-> **v1.2 边界声明**:完整 Prompt 模板(含 few-shot 示例与错误处理)见 [`08-memory-distillation-pipeline.md` §五.1 教师客户端](../../agenticmemory_training/08-memory-distillation-pipeline.md)。本文档不重复 Prompt 原文,仅保留设计要点。
+> **v1.2 边界声明**:完整 Prompt 模板(含 few-shot 示例与错误处理)见 [`08-memory-distillation-pipeline.md` §五.1 教师客户端](08-memory-distillation-pipeline.md)。本文档不重复 Prompt 原文,仅保留设计要点。
 4. 如果一条信息需要多步推理才能得出，仍然提取，但在confidence中标注较低分值
 
 文本：{input_text}
