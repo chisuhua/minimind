@@ -1,0 +1,61 @@
+name: Check Doc Refs
+
+# 检查 Markdown 文档的交叉引用是否有效
+# 防止出现 "Wiki DAG → 08a §3" 类错误引用(2026-08-26 发现)
+
+on:
+  push:
+    branches: [master]
+    paths:
+      - "**.md"
+      - ".github/workflows/check-doc-refs.yml"
+      - "scripts/check_doc_refs.py"
+      - "scripts/test_check_doc_refs.py"
+  pull_request:
+    branches: [master]
+    paths:
+      - "**.md"
+      - "scripts/check_doc_refs.py"
+
+jobs:
+  check-doc-refs:
+    runs-on: ubuntu-latest
+    name: Check cross-references in Markdown docs
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Run unit tests
+        run: |
+          python3 -m unittest scripts.test_check_doc_refs -v
+
+      - name: Check cross-references
+        run: |
+          python3 -m scripts.check_doc_refs --json > doc_refs_report.json || EXIT_CODE=$?
+
+          if [ -n "$EXIT_CODE" ]; then
+            echo "❌ Doc refs check FAILED with exit code $EXIT_CODE"
+            echo ""
+            echo "=== Human-readable report ==="
+            python3 -m scripts.check_doc_refs
+            echo ""
+            echo "=== JSON report (for diagnostics) ==="
+            cat doc_refs_report.json
+            exit $EXIT_CODE
+          else
+            echo "✅ Doc refs check PASSED"
+          fi
+
+      - name: Upload JSON report on failure
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: doc-refs-report
+          path: doc_refs_report.json
+          retention-days: 7
