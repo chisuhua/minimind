@@ -1,0 +1,269 @@
+# SOCA v3-Micro-Final Configuration — Machine-Readable Source of Truth
+#
+# 本文件是 03-sweet-spot-layers.md §五.6 SOCA v3-Micro-Final 参数真源的机器可读副本。
+# 所有 SOCA 文档(01/02/04/05/06/07/08/09/README)中如出现冲突参数,以本文件 + 03 §五.6 为准。
+#
+# 设计动机:消除"文档间抄数字"漂移——任何引用 SOCA v3-Micro-Final 配置的代码应从此文件加载,
+# 而不是从文档中手抄数字。
+#
+# 加载示例(Python):
+#   ```python
+#   import yaml
+#   with open("docs/research/agenticsom/soca_micro_final_config.yaml") as f:
+#       cfg = yaml.safe_load(f)
+#   socaconfig = SOCAConfig(**cfg["soca_config_base"])
+#   socamicro = SOCAMicroConfig(**cfg["soca_micro_specific"], **cfg["soca_config_base"])
+#   ```
+#
+# 版本: 1.0
+# 最后更新: 2026-08-28
+# 锁定项来源: 03-sweet-spot-layers.md §五.6 + §十
+# 修订历史: 见 docs/research/agenticsom/README.md §文档版本
+
+meta:
+  config_name: SOCA_v3_Micro_Final
+  version: "1.0"
+  lock_date: "2026-08-28"
+  source_of_truth: "03-sweet-spot-layers.md §五.6 + §十"
+  supersedes: ["v3-Micro-REV (14L 106M, 01 §六)", "v3-Micro-Sweet (14L 148M, 02 §四)"]
+  for_scale: "155M 验证模型;0.8B-1.2B 正式模型时按 03 §九 缩放预测外推"
+
+# ────────────────────────────────────────────────────────────
+# 全局配置(SOCAConfig + SOCAMicroConfig 共有字段)
+# ────────────────────────────────────────────────────────────
+soca_config_base:
+  # 架构基础
+  d_model: 896
+  d_bus: 256
+  vocab_size: 32000
+  max_seq_len: 2048
+
+  # 注意力(感知/动作用 Standard 风格 head)
+  n_heads_attn: 14              # 896/64
+  d_head_attn: 64
+  deltanet_state_dim: 128
+
+  # 区域划分(物理 16 层 = 5P + 6W + 5A;等效 18 层含中段 2×2 循环)
+  n_perception: 5
+  n_ws_front: 2
+  n_ws_mid_physical: 2
+  n_ws_back: 2
+  n_action: 5
+  n_cycles: 2                   # 中段循环次数(等效 4 层)
+
+  # FFN 扩展比
+  ffn_mult_perception: 2.2      # 896 → 1971 → 896
+  ffn_mult_action: 1.8          # 896 → 1612 → 896
+
+  # 工作空间前段(Soft MoE)
+  front_n_slots: 4
+  front_n_experts_per_slot: 4
+  front_expert_hidden: 1024     # 896→1024→896
+  front_dispatch: "sigmoid"     # 非 softmax(J-Lens 友好,01 P2 修正)
+
+  # 工作空间中★段(Multi-Head MoE,Latent 空间)
+  mid_n_heads: 4                # 256/64
+  mid_d_head: 64
+  mid_experts_per_head: 12      # per-head(SOCA v3-Micro-Final 关键:4h × 12e = 48 总)
+  mid_top_k_per_head: 4         # per-head(v3-Micro-Final;Medium/Large 用 2)
+  mid_expert_hidden: 192        # 64→192→64(24.6K/专家)
+  mid_attn_type: "linear"       # 无 softmax(J-Lens 友好)
+  mid_total_experts: 48         # = 4 heads × 12 experts/head(派生)
+  mid_active_per_token: 16      # = 4 heads × 4 top_k(派生)
+  mid_combination_space: "((C_12^4)^4) = 495^4 ≈ 6×10^10"  # 派生
+
+  # 工作空间后段(Fine-grained MoE,Sparse × Standard × Fine)
+  back_n_shared: 1
+  back_n_routed: 20
+  back_n_device: 1
+  back_top_k: 5
+  back_routed_hidden: 320       # 896→320→896
+  back_shared_hidden: 448      # 896→448→896
+  back_device_hidden: 224       # 896→224→896
+  back_combination_space: "C_20^5 = 15504"  # 派生
+
+  # 动作区(Multi-Head LoRA-MoE)
+  lora_n_heads: 2
+  lora_per_head: 10             # = 20 总 LoRA
+  lora_rank: 8
+  lora_d_head: 448              # 896/2
+  lora_per_expert_params: 7200  # 8×448 + 448×8 = 7.2K(派生)
+
+  # 联合 SAE(三段配置,差异显著)
+  sae_mid_dict: 2048            # 中段 K=12(联合训练)
+  sae_mid_k: 12
+  sae_light_dict: 1024          # 前后段 K=16(轻量)
+  sae_light_k: 16
+
+  # 广播总线
+  bus_gamma: 0.99               # T_eff ≈ 100 层(v3-Micro 工作空间仅 6 层,理论偏保守)
+  bus_d_model_ratio: 3.5        # d_bus = d_model / 3.5(v3-Micro-Final;Medium/Large 用 4)
+
+  # 监控
+  monitor_dim: 48               # v3-Micro-Final 专用(Medium 是 256)
+
+  # 训练超参(与 08 §五.2 v3-Micro-Final 子表对齐)
+  batch_size: 256
+  seq_len: 2048
+  lr: 2.5e-4
+  warmup_steps: 2500
+  max_steps: 11500              # 6B / (256 × 2048)
+  weight_decay: 0.1
+  grad_clip: 1.0
+
+  # 辅助损失权重(08 §五.2 子表)
+  lambda_sparse: 0.001          # L1 稀疏(感知/动作)
+  lambda_orth: 0.005            # 正交性(中段;太强会触发 F3)
+  lambda_sae: 0.05              # SAE 重建(Phase 1 起始)
+  lambda_concept: 0.001         # 概念正交
+  lambda_route: 0.005           # 路由负载均衡
+  lambda_cycle: 0.005           # 循环一致性
+
+# ────────────────────────────────────────────────────────────
+# SOCAMicroConfig 专属字段(04 §二,SOCAConfig 缺这些)
+# SOCAConfig 的"字段子集近似"边界见 07 §五 对比表
+# ────────────────────────────────────────────────────────────
+soca_micro_specific:
+  # 中段细节(与上面 mid_* 重复;SOCAMicroConfig 字段名差异)
+  mid_experts_per_head: 12
+  mid_top_k_per_head: 4
+  mid_expert_hidden: 192
+
+  # 前段细节(02 §四.2 → 03 §五.6 精简)
+  front_n_slots: 4
+  front_n_experts_per_slot: 4
+  front_expert_hidden: 1024
+
+  # 后段细节
+  back_n_routed: 20
+  back_top_k: 5
+  back_routed_hidden: 320
+
+  # 动作区细节
+  lora_n_heads: 2
+  lora_per_head: 10
+
+  # SAE 字典(三段)
+  sae_mid_dict: 2048
+  sae_mid_k: 12
+  sae_light_dict: 1024
+  sae_light_k: 16
+
+  # 注意力类型(03 §五.6 感知/动作分布)
+  perception_attn_types: ["standard", "gated_deltanet", "gated_deltanet", "gated_deltanet", "gated_standard"]
+  action_attn_types: ["gated_deltanet", "gated_deltanet", "gated_deltanet", "gated_standard", "gated_standard"]
+
+  # 监控 + 训练
+  monitor_dim: 48
+  lr: 2.5e-4
+  warmup_steps: 2500
+  max_steps: 11500
+
+  # 辅助损失权重
+  lambda_sparse: 0.001
+  lambda_orth: 0.005
+  lambda_sae: 0.05
+  lambda_concept: 0.001
+  lambda_route: 0.005
+  lambda_cycle: 0.005
+
+# ────────────────────────────────────────────────────────────
+# 派生量(自动从基础配置计算,不要手动覆盖)
+# ────────────────────────────────────────────────────────────
+derived:
+  total_physical_layers: 16     # 5 + 2 + 2 + 2 + 5
+  total_effective_layers: 18    # 5 + 2 + (2×2) + 2 + 5
+  total_params_M: 155           # ±5M 范围(03 §五.6)
+  bus_T_eff_layers: 100         # 1 / (1 - 0.99)
+  training_time_h_main: 19      # 8×A100-80G
+  training_time_d_ablation: 4.5 # 24 消融,4 并行
+  total_verification_d: 6       # 主模型 + 消融 + 分析
+  statistical_power: 0.94
+  ablation_significance: 0.96   # 23/24
+  scale_to_0_8B: 5.2            # 155M → 800M
+  scale_to_1_2B: 7.7            # 155M → 1200M
+
+# ────────────────────────────────────────────────────────────
+# 注意力类型分布(03 §五.6)
+# ────────────────────────────────────────────────────────────
+attention_distribution:
+  perception:
+    standard: 1                 # L1
+    gated_deltanet: 3           # L2-L4
+    gated_standard: 1           # L5
+    ratio: "1 Std : 3 Gated DeltaNet : 1 Gated Std(对齐 Qwen3.5)"
+  workspace_front:
+    gated_standard: 2           # L6-L7
+    moe_type: "Soft × Standard × Coarse(4 slots × 4 experts)"
+  workspace_mid:
+    linear: 2                   # L8-L9(共享权重,2 次循环)
+    moe_type: "Sparse × Latent × Multi-Head(4h × 12e, Top-4/head)"
+    cycles: 2                   # 等效 4 层
+  workspace_back:
+    gated_standard: 2           # L10-L11
+    moe_type: "Sparse × Standard × Fine(Shared + 20 Routed Top-5 + Device)"
+  action:
+    gated_deltanet: 3           # L12-L14
+    gated_standard: 2           # L15-L16
+    ratio: "3 Gated DeltaNet : 2 Gated Std"
+    moe_type: "Dense × MH-LoRA(2h × 10 LoRA/head, rank=8)"
+
+# ────────────────────────────────────────────────────────────
+# 三视角可解释性(README §三视角可解释性)
+# ────────────────────────────────────────────────────────────
+interpretability:
+  j_space:
+    method: "Down/Up Interface + 注意力类型切换"
+    boundary_layers:
+      - "感知区→工作空间:d_model(896) → d_bus(256) Down Interface"
+      - "工作空间→动作区:d_bus(256) → d_model(896) Up Interface"
+  j_lens:
+    method: "中段使用 Linear Attention(无 softmax,Jacobian 可解析)"
+    boundary: "L8-L9 共享权重 × 2 循环 = 等效 4 层"
+  sae:
+    method: "三段联合 SAE"
+    dict_sizes:
+      mid: 2048
+      front_back: 1024
+
+# ────────────────────────────────────────────────────────────
+# 消融注册表(交叉引用 04 §九 + 05 §二)
+# ────────────────────────────────────────────────────────────
+ablations:
+  socA_architecture:  # 04 §九,24 项
+    total: 24
+    ids: "SOCA-A0 ~ SOCA-A24(SOCA-A0 是 baseline)"
+    source: "04-implementation-roadmap.md §九"
+  general_pretraining:  # 05 §二,24 项(SOCA 适配后实做 22 项)
+    total_designed: 24
+    total_actually_run: 22  # E1(Sophia)+F1(3D 并行) 在 155M 不适用
+    ids: "GENERAL-A1 ~ GENERAL-F4"
+    source: "05-pretraining-ablation-plan.md §二"
+  combined_total: 46
+
+# ────────────────────────────────────────────────────────────
+# 失效模式与防护(08 §一 + §二,索引级引用)
+# ────────────────────────────────────────────────────────────
+router_failure_modes:
+  source: "08-router-stability-training.md §一"
+  modes: ["F1 专家坍缩", "F2 熵坍缩", "F3 隐空间坍缩", "F4 路由震荡", "F5 门控震荡", "F6 路由退化", "F7 SAE-路由冲突"]
+  protections: 7  # L1 初始化 / L2 渐进启用 / L3 温度 PID / L4 梯度平衡 / L5 容量保护 / L6 隐空间监控 / L7 自愈
+
+# ────────────────────────────────────────────────────────────
+# 信息论性质(09 §八 ~ §十七,索引级引用)
+# ────────────────────────────────────────────────────────────
+information_theory:
+  source: "09-sae-bus-information-theory.md"
+  bus_sufficiency_target: 0.8   # §十一 充分性 > 0.8 = 健康
+  bus_d_capacity_optimal: "d_model/4 ~ d_model/8"  # §十五
+  sae_lifecycle_stages: 4        # §三.1 诞生/特化/稳态/衰退重生
+
+# ────────────────────────────────────────────────────────────
+# 实施路径
+# ────────────────────────────────────────────────────────────
+implementation:
+  training_pipeline: "MiniMind trainer/(沿用现有 SFT/LoRA/RLHF 训练链路)"
+  model_file: "model/model_soca_v3_micro.py"
+  trainer_file: "trainer/train_soca.py"
+  evaluation_period_d: 6  # 4 周里程碑计划(04 §十二)
+  primary_compute: "8 × A100-80G"
