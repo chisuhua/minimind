@@ -308,6 +308,57 @@ reward = 0.4 * format + 0.2 * signature + 0.3 * execution + 0.1 * task
 - 改 baseline、评估指标、里程碑 → 必须同步更新本文档的"当前状态"。
 - 新增风险 → 必须记录到 `05-risk-register.md`。
 
+### 6.5 架构与训练工程解耦原则（2026-08-31 决策）
+
+> **目的**：防止 7 轮架构迭代（v1→v4→AGI→元认知闭环）的失败模式——"架构复杂度爆炸 + 训练工程同时耦合 = 6 个月内被工程现实击穿"。本节给出 4 条**强制原则**，所有新讨论/新方案必须遵守。
+
+#### 6.5.1 三层独立轨道
+
+项目工作分为 **3 个独立轨道**，每个轨道有独立的 owner、时间盒、KPI，**不混讨论**：
+
+| 轨道 | 当前事实 | 边界（不依赖） |
+|---|---|---|
+| **T1：记忆引擎** | P1 实验已就绪（[`docs/agenticmemory_training/08c-p1-minimum-loop.md`](docs/agenticmemory_training/08c-p1-minimum-loop.md)），P2 待启动 | 不依赖 AgenticDSL 训练结果；不依赖 HydraForge runtime 集成；不依赖 SOCA 消融 |
+| **T2：AgenticDSL 训练** | M0 待启动（[`docs/agenticdsl-training/01-training-data-pipeline.md`](docs/agenticdsl-training/01-training-data-pipeline.md)） | 不依赖 HydraForge runtime；不依赖 SOCA 消融；仅消费 T1 产出物（`memory_train.jsonl` + `schema_v*.json`） |
+| **T3：HydraForge runtime 集成** | P0 断链待修复（[`HydraForge/docs/architecture/axis6-chain-workflow-architecture-2026-08.md`](../HydraForge/docs/architecture/axis6-chain-workflow-architecture-2026-08.md) §十一） | 不依赖 T1；不依赖 T2；不依赖 SOCA 消融 |
+| **T4：SOCA 假设验证** | 零实验数据（[`docs/research/soca/README.md`](docs/research/soca/README.md) §"SOCA 实测数据空白声明"） | 不进入工程路径；仅作为教训 1 反证 |
+
+#### 6.5.2 记忆优先 + 推理在后
+
+**前期记忆为主，后期推理建立在记忆之上**。具体阶段：
+
+| 阶段 | 时间窗 | 唯一工作 | 启动条件 |
+|---|---|---|---|
+| **阶段 0（记忆优先）** | 0-3 月 | 仅 T1：记忆引擎（P1 + 08 蒸馏管线 + Wiki DAG 构建） | — |
+| **阶段 1（启动推理训练）** | 3-6 月 | T2：AgenticDSL 训练（TR-1） | T1 记忆引擎 DoD 矩阵达标（待 P1 完成后定义） |
+| **阶段 2（runtime 集成）** | 6-12 月 | T3：HydraForge 集成 | T2 模型可用 + HydraForge P0 修复 |
+| **阶段 3（SOCA / 元认知）** | 12 月+ | T4：SOCA 消融 / 元认知闭环 v4.7 | 仅在前 3 阶段有剩余预算时启动 |
+
+**记忆引擎 DoD 矩阵**（待 P1 完成后在 `01-memory-model.md` §1 显式定义）：
+- 抽取层 DoD：13 字段 schema 抽取 F1 ≥ ?
+- 完整性 DoD：推理无损 B/A ≥ 0.98
+- 自知能力 DoD：irr_estimate 校准偏差 ≤ ?
+- P1 完成时**只定义抽取层 DoD**；其他 DoD 在 P2/P3 实验中定义
+
+#### 6.5.3 架构与训练工程解耦
+
+- **架构决策**与**训练工程决策**必须分离：架构文档（`docs/architectures/`、`HydraForge/docs/architecture/`）不讨论"怎么训练"；训练文档（`docs/agenticdsl-training/`、`docs/agenticmemory_training/`）不讨论"运行时架构"
+- **每个架构决策必须有显式消费路径**：详见 [`HydraForge/docs/architecture/axis6-chain-workflow-architecture-2026-08.md`](../HydraForge/docs/architecture/axis6-chain-workflow-architecture-2026-08.md) §"消费者契约"
+- **每个训练阶段必须有显式降级路径**：P1 失败 → 改设计或换模型；08 蒸馏管线失败 → fallback 到教师 API 全量标注；TR-1 失败 → 切 3B dense（不是 MoE，见 [`docs/architectures/04-v4-nacr.md`](docs/references/historical-architectures/04-v4-nacr.md) §二 错误 1）
+
+#### 6.5.4 季度耦合度审计
+
+每季度（与 [`HydraForge/docs/architecture/README.md`](../HydraForge/docs/architecture/README.md) §三 "审查频率：每月 1 次"对齐）审计一次：
+
+```
+□ 是否有架构决策同时影响训练工程？（违反 6.5.3）
+□ 是否有训练工程决策同时影响架构？（违反 6.5.3）
+□ 是否有 3 个以上轨道在同一周被讨论？（违反 6.5.1）
+□ 是否有架构决策没有"消费路径"声明？（违反 6.5.3）
+```
+
+**关联决策**：详见 §12.10 F-06。
+
 ---
 
 ## 7. 评测体系（HydraForgeBench）
@@ -566,11 +617,13 @@ final reward = 0.4 * L1_format + 0.2 * L2_signature + 0.3 * L3_execution + 0.1 *
 |---|---|---|
 | **Schema 融合边界** | **Schema 层分离 + 数据集层联合 + 模型层多任务** | 自动涌现 schema (`schema_memory_v*.json`) 与人工 schema (`mvp-schema.md`) 在 schema 层互不污染,通过 task tag 在训练数据层联合 |
 | **可参与涌现锚定的字段** | **仅 `entities` 的 9 种类型** | 其余 12 字段(intent/topic/facts/横切元数据)只从对话语料产生,不参与自动涌现 |
-| **模型选型** | **Qwen3-0.6B base + 双 LoRA**（或单多任务 SFT） | 对齐 08a D-10 tokenizer 硬约束(Qwen3 系列);同一 base 支持两种 task(`session_extract` / `memory_extract`) |
+| **模型选型** | **Qwen3.5-0.8B base + 双 LoRA**（或单多任务 SFT） | 对齐 08a D-10 tokenizer 硬约束(Qwen3 系列);同一 base 支持两种 task(`session_extract` / `memory_extract`);⚠️ **2026-08-31 由 P1 spec D-A 修订:Qwen3-0.6B → Qwen3.5-0.8B**(Qwen3 系列未发布,改用 Qwen3.5-0.8B 已验证可用版本) |
 | **运行时抽取实现** | **interim:教师 API + 规则;统一模型就绪后替换** | P0 阶段不训练独立小模型;编排层(OrchestratorInterface + 4 级降级)价值保留,与抽取器实现解耦 |
 | **消费方** | **统一:同一个智能体消费同一个模型的两种 task 输出** | 不再分"训练消费方 / 运行时消费方" |
 
 **关键洞察**:用户原话"消费方是一样的,都是先构建训练数据集 → 训练一个小模型 → 运行时智能体消费" → 统一小模型同时承担两个 task,但**两份 schema 保持分离**(字段级融合是范畴错误,详见 [`docs/agenticmemory_training/08b-seed-schema-fusion.md`](docs/agenticmemory_training/08b-seed-schema-fusion.md))。
+
+> **2026-08-31 修订(F-04 模型选型行,由 P1 spec D-A 触发)**:`Qwen3-0.6B` → `Qwen3.5-0.8B`。理由:Qwen3 系列未发布,改用已验证可用的 Qwen3.5-0.8B(sub-1B 目标一致 + 与 08 蒸馏管线探针选型一致)。修订来源:[`docs/superpowers/specs/2026-08-31-p1-minimum-loop-fixes-design.md`](docs/superpowers/specs/2026-08-31-p1-minimum-loop-fixes-design.md) §3.3(🔴-1 治理登记)。fallback 链:Qwen3.5-0.8B → Qwen3.5-1.5B 或更大。
 
 **关联文档**:
 - 新建 `docs/agenticmemory_training/08b-seed-schema-fusion.md`(Schema 融合边界规范)
@@ -596,8 +649,42 @@ final reward = 0.4 * L1_format + 0.2 * L2_signature + 0.3 * L3_execution + 0.1 *
 
 **Owner**:AgenticMind 训练团队
 
+#### F-06：架构与训练工程解耦 + 记忆优先 ✅ 已决策（2026-08-31）
+
+| 维度 | 选择 | 备注 |
+|---|---|---|
+| **三层独立轨道** | T1 记忆引擎 / T2 AgenticDSL 训练 / T3 HydraForge 集成 / T4 SOCA 验证 | 每个轨道独立 owner /时间盒 / KPI;不混轨道讨论 |
+| **阶段时序** | 阶段 0 (0-3 月):仅 T1 → 阶段 1 (3-6 月):T2 (依赖 T1 DoD) → 阶段 2 (6-12 月):T3 (依赖 T2) → 阶段 3 (12 月+):T4 | 记忆优先,推理在后;每个阶段有显式启动条件 |
+| **架构 vs 训练解耦** | 架构文档不讨论"怎么训练";训练文档不讨论"运行时架构" | 防止 7 轮迭代失败模式重演 |
+| **消费路径强制** | 每个架构决策必须有显式"消费路径"声明 | 见 [`HydraForge/docs/architecture/axis6-chain-workflow-architecture-2026-08.md`](../HydraForge/docs/architecture/axis6-chain-workflow-architecture-2026-08.md) §"消费者契约" |
+| **降级路径强制** | 每个训练阶段必须有显式降级路径 | P1 失败→改设计或换模型;TR-1 失败→切 3B dense |
+| **季度审计** | 每 3 个月检查:架构↔训练 / 轨道独立性 / 消费路径完备性 | 与 HydraForge 月度档对齐 |
+
+**核心原则（AGENTS.md §6.5）**:
+1. **三层独立轨道**——T1/T2/T3/T4 不混讨论
+2. **记忆优先 + 推理在后**——阶段 0 仅 T1,阶段 1 才启动 T2
+3. **架构与训练工程解耦**——各自独立决策,不交叉
+4. **季度耦合度审计**——违规项必须在下季度修正
+
+**关键洞察（来自历史 + HydraForge + SOCA 三方一致证据）**:
+- 历史 7 轮迭代反复证明"复杂架构 + 紧耦合 = 6 个月内被工程现实击穿"（[`docs/architectures/99-final-recommendation.md`](docs/architectures/99-final-recommendation.md) §三 教训 7）
+- HydraForge axis6 缺口修复表 T1-T8 表明**集成复杂度爆炸需要"按预算设防而非按深度"**（[`HydraForge/docs/architecture/axis6-chain-workflow-architecture-2026-08.md`](../HydraForge/docs/architecture/axis6-chain-workflow-architecture-2026-08.md) §六 N1）
+- SOCA 消费者路径 A 悬空正是因为**自训架构假设未与 7B 现成权重决策对齐**（[`docs/research/soca/README.md`](docs/research/soca/README.md) §"消费者契约"）
+
+**关联决策**:
+- F-04：双 Schema 统一消费（已决策 2026-08-24）
+- F-05：包归属（已决策 2026-08-25）
+
+**关联文档**:
+- AGENTS.md §6.5 工作原则（强制执行入口）
+- [`docs/architectures/99-final-recommendation.md`](docs/architectures/99-final-recommendation.md) §三 8 个核心教训
+- [`HydraForge/docs/architecture/axis6-chain-workflow-architecture-2026-08.md`](../HydraForge/docs/architecture/axis6-chain-workflow-architecture-2026-08.md) §六 N1-N5（集成阶段原则）
+- [`docs/research/soca/README.md`](docs/research/soca/README.md) §"消费者契约"（研究阶段原则）
+
+**Owner**:AgenticMind 训练团队 + 架构组（联合）
+
 ---
 
-**版本**：v1.2(新增 F-05)
-**最后更新**:2026-08-25
+**版本**：v1.3.1（新增 F-06；§6.5 新增"架构与训练工程解耦原则"；F-04 模型选型行修订 Qwen3-0.6B → Qwen3.5-0.8B）
+**最后更新**:2026-08-31
 **Owner**：AgenticMind 训练团队
