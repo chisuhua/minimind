@@ -19,7 +19,6 @@
 from __future__ import annotations
 
 import json
-import statistics
 from collections import Counter
 from dataclasses import dataclass, field
 from pathlib import Path
@@ -339,27 +338,43 @@ def report_to_markdown(report: EvaluationReport) -> str:
 
 
 def main() -> None:
-    """CLI 入口(stub)"""
+    """CLI 入口"""
     import argparse
+    import sys
 
-    parser = argparse.ArgumentParser(description="P1-3 评估 CLI(stub)")
+    parser = argparse.ArgumentParser(description="P1-3 评估 CLI")
     parser.add_argument(
         "--input",
         type=Path,
         default=Path("data/agenticmemory_training/v0/session_extract_v0.jsonl"),
     )
-    parser.add_argument("--output", type=Path, default=Path("data/agenticmemory_training/v0/findings_v0.md"))
+    parser.add_argument(
+        "--output",
+        type=Path,
+        default=Path("data/agenticmemory_training/v0/findings_v0.md"),
+    )
     parser.add_argument(
         "--multi-run",
         action="store_true",
-        help="启用一致性评估(需多次标注)",
+        help="启用多轮一致性评估(需多次标注;当前单文件回退单次评估)",
     )
     args = parser.parse_args()
 
-    print(f"P1-3 stub:input={args.input}, output={args.output}")
-    print("注意:此脚本为骨架,实际执行需要:")
-    print(f"  1. 准备 session_extract_v0.jsonl(P1-2 产出)放在 {args.input}")
-    print("  2. 取消 main() 末尾 raise,启用实际评估逻辑")
+    if not args.input.exists():
+        print(f"错误:标注文件不存在 {args.input}", file=sys.stderr)
+        raise SystemExit(2)
+
+    annotations = list(load_annotations(args.input))
+    print(f"读取标注: {len(annotations)} 条")
+
+    if args.multi_run:
+        print("注意:--multi-run 需要多次标注运行数据,当前单文件输入回退为单次评估", file=sys.stderr)
+    result = evaluate(annotations)
+    md = report_to_markdown(result)
+
+    args.output.parent.mkdir(parents=True, exist_ok=True)
+    args.output.write_text(md, encoding="utf-8")
+    print(f"评估报告已写入: {args.output}")
 
 
 if __name__ == "__main__":

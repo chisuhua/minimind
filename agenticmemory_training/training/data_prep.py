@@ -139,25 +139,46 @@ def split_train_dev(
 
 def main() -> None:
     import argparse
+    import sys
 
-    parser = argparse.ArgumentParser(description="P1-4 数据准备 CLI(stub)")
+    parser = argparse.ArgumentParser(description="P1-4 数据准备 CLI")
     parser.add_argument(
         "--annotations", type=Path, default=Path("data/agenticmemory_training/v0/session_extract_v0.jsonl")
     )
-    parser.add_argument(
-        "--output-train", type=Path, default=Path("data/agenticmemory_training/v0/train.jsonl")
-    )
-    parser.add_argument(
-        "--output-dev", type=Path, default=Path("data/agenticmemory_training/v0/dev.jsonl")
-    )
+    parser.add_argument("--output-train", type=Path, default=Path("data/agenticmemory_training/v0/train.jsonl"))
+    parser.add_argument("--output-dev", type=Path, default=Path("data/agenticmemory_training/v0/dev.jsonl"))
     parser.add_argument("--max-context-turns", type=int, default=8)
     parser.add_argument("--dev-ratio", type=float, default=0.1)
     args = parser.parse_args()
 
-    print(f"P1-4 data_prep stub:{args.annotations} → {args.output_train} / {args.output_dev}")
-    print("注意:此脚本为骨架,实际执行需要:")
-    print(f"  1. 准备 session_extract_v0.jsonl(P1-2 产出)")
-    print("  2. 取消 main() 末尾 raise,启用实际逻辑")
+    if not args.annotations.exists():
+        print(f"错误:标注文件不存在 {args.annotations}", file=sys.stderr)
+        raise SystemExit(2)
+
+    annotations = []
+    with args.annotations.open(encoding="utf-8") as f:
+        for line in f:
+            if line.strip():
+                annotations.append(json.loads(line))
+    print(f"读取标注: {len(annotations)} 条 turn 标注")
+
+    # 按 session 构建样本,避免 build_training_samples 混淆不同 session
+    samples: list[dict] = []
+    for _sid, sess_anns in group_by_session(iter(annotations)):
+        samples.extend(build_training_samples(sess_anns, max_context_turns=args.max_context_turns))
+
+    train, dev = split_train_dev(samples, dev_ratio=args.dev_ratio)
+    print(f"样本: {len(samples)} → train {len(train)} / dev {len(dev)}")
+
+    args.output_train.parent.mkdir(parents=True, exist_ok=True)
+    args.output_dev.parent.mkdir(parents=True, exist_ok=True)
+    with args.output_train.open("w", encoding="utf-8") as f:
+        for s in train:
+            f.write(json.dumps(s, ensure_ascii=False) + "\n")
+    with args.output_dev.open("w", encoding="utf-8") as f:
+        for s in dev:
+            f.write(json.dumps(s, ensure_ascii=False) + "\n")
+    print(f"已写 train: {args.output_train} / dev: {args.output_dev}")
 
 
 if __name__ == "__main__":
