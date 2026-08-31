@@ -29,14 +29,19 @@ from agenticmemory_training.training.eval_f1 import (
 
 
 def run_lora_inference(
-    base_model: str, adapter_dir: Path, prompts: list[str], max_new_tokens: int = 512
+    base_model: str,
+    adapter_dir: Path,
+    prompts: list[str],
+    max_new_tokens: int = 512,
+    batch_size: int = 4,
 ) -> list[str]:
     """加载 base + LoRA adapter 推理(复用 eval_f1.run_inference 的模式)"""
     from agenticmemory_training.training.eval_f1 import run_inference as eval_f1_infer
 
     samples = [{"input": p} for p in prompts]
     return eval_f1_infer(
-        base_model, adapter_dir, samples, max_new_tokens=max_new_tokens
+        base_model, adapter_dir, samples,
+        max_new_tokens=max_new_tokens, batch_size=batch_size,
     )
 
 
@@ -58,11 +63,22 @@ def _compute_f1(preds: list[dict[str, Any] | None], golds: list[dict[str, Any] |
 
 
 def compute_random_label_f1(
-    base_model: str, adapter_dir: Path, samples: list[dict[str, Any]], seed: int = 42
+    base_model: str,
+    adapter_dir: Path,
+    samples: list[dict[str, Any]],
+    seed: int = 42,
+    batch_size: int = 4,
 ) -> dict[str, Any]:
-    """计算 genuine vs random-label(shuffle gold)对比 F1"""
+    """计算 genuine vs random-label(shuffle gold)对比 F1
+
+    已知边界:当 dev 集某字段值高度集中(如 language 全为 zh),shuffle 后 F1 仍高,
+    该对照在字段值多样性不足时区分度低。实施时需在 baseline_f1.json 注记
+    各字段值分布,供 P1-5 类别 D 判定参考。
+    """
     prompts = [s["input"] for s in samples]
-    raw_outputs = run_lora_inference(base_model, adapter_dir, prompts)
+    raw_outputs = run_lora_inference(
+        base_model, adapter_dir, prompts, batch_size=batch_size
+    )
 
     preds: list[dict[str, Any] | None] = []
     golds: list[dict[str, Any] | None] = []
@@ -72,6 +88,9 @@ def compute_random_label_f1(
         golds.append(extract_first_turn(gold) if gold else None)
         preds.append(extract_first_turn(pred) if pred else None)
 
+    n_parse_failed_pred = sum(1 for p in preds if p is None)
+    n_parse_failed_gold = sum(1 for g in golds if g is None)
+
     genuine = _compute_f1(preds, golds)
 
     # gold shuffle(pair 错位)
@@ -80,7 +99,13 @@ def compute_random_label_f1(
     rng.shuffle(shuffled_golds)
     random_f1 = _compute_f1(preds, shuffled_golds)
 
-    return {"genuine_f1": genuine, "random_label_f1": random_f1, "n_total": len(samples)}
+    return {
+        "genuine_f1": genuine,
+        "random_label_f1": random_f1,
+        "n_total": len(samples),
+        "n_parse_failed_pred": n_parse_failed_pred,
+        "n_parse_failed_gold": n_parse_failed_gold,
+    }
 
 
 def main() -> None:
@@ -90,6 +115,7 @@ def main() -> None:
     parser.add_argument("--dev-jsonl", type=Path, default=Path("data/agenticmemory_training/v0/dev.jsonl"))
     parser.add_argument("--output-dir", type=Path, default=Path("runs/lora_v0"))
     parser.add_argument("--seed", type=int, default=42)
+    parser.add_argument("--batch-size", type=int, default=4)
     args = parser.parse_args()
 
     samples = []
@@ -103,6 +129,7 @@ def main() -> None:
         adapter_dir=args.adapter_dir,
         samples=samples,
         seed=args.seed,
+        batch_size=args.batch_size,
     )
 
     args.output_dir.mkdir(parents=True, exist_ok=True)
