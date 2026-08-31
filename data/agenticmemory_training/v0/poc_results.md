@@ -17,3 +17,14 @@
 - [ ] Kimi API key(P1-1 合成 + IRR 第二标注)
 - [ ] DeepSeek API key(P1-2 主标注)
 - [ ] GPU ≥8GB(vLLM 服务 + LoRA 训练)
+
+## P1-1 数据合成进展(2026-09-01)
+- ✅ 腿 A 公开集完成:从 HuggingFaceH4/ultrachat_200k(test_gen)提取 40 条多轮对话(3-11 turns)
+  - 来源:https://hf-mirror.com(HF 直连不可达,经镜像)
+  - 文件:data/agenticmemory_training/v0/conversations.jsonl
+  - 注意:计划首选 SHARELY(git 不可达,ls-remote 超时)与 lmsys-chat-1m(gated 403)均不可用,改用 ultrachat_200k(非 gated)
+  - 格式:session_id / source=public:ultrachat / turns[]{role,text,timestamp} / metadata.teacher=public
+  - 验证:格式兼容 P1-2 teacher_labeling 消费链(.get() 读取)
+- ⏳ 腿 B 合成阻塞:需有效 Kimi API key(当前 401 Invalid Authentication)
+- ⏳ P1-2 标注阻塞:需有效 DeepSeek(402 余额不足)+ Kimi(401)key
+- ⏳ PoC-2 vLLM / P1-4 训练阻塞:无 GPU 环境,peft/transformers/vllm 未安装
