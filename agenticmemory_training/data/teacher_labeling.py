@@ -255,6 +255,110 @@ def label_sessions(
 
 
 # =========================================================================
+# 标注一致性(IRR)— Metis 🔴-3 整改:Kimi-K3 第二标注者 + Krippendorff α
+# =========================================================================
+
+
+def compute_krippendorff_alpha(
+    rater_a: list[str], rater_b: list[str]
+) -> float:
+    """两个标注者对同一批样本的 Krippendorff α(nominal scale, 2 raters)
+
+    NLTK coincidence 口径:每个样本对贡献两次(对称),总 coincidence = 2n。
+
+    自测:
+      perfect: k(['q','c','q','c'], ['q','c','q','c']) == 1.0
+      random : k(['q','q','c','c'], ['q','c','q','c']) ≈ 0(2 类下)
+    """
+    if len(rater_a) != len(rater_b) or len(rater_a) == 0:
+        raise ValueError("rater_a 与 rater_b 长度必须相同且非空")
+    n = len(rater_a)
+    values = sorted(set(rater_a) | set(rater_b))
+    if len(values) <= 1:
+        return 1.0
+    idx = {v: i for i, v in enumerate(values)}
+    k = len(values)
+
+    # 对称 coincidence matrix:每个样本贡献 2 次
+    coinc = [[0.0] * k for _ in range(k)]
+    for va, vb in zip(rater_a, rater_b):
+        i, j = idx[va], idx[vb]
+        coinc[i][j] += 1.0
+        coinc[j][i] += 1.0
+
+    coinc_total = 2.0 * n  # = 2n
+
+    # 观测不一致(总 coincidence - 对角线一致)
+    do = coinc_total - sum(coinc[i][i] for i in range(k))
+
+    # 期望不一致(NLTK 口径,基于边际 rowsum)
+    rowsum = [sum(row) for row in coinc]
+    de = coinc_total - sum(rowsum[i] * rowsum[i] for i in range(k)) / (coinc_total - 1.0)
+
+    if de == 0.0:
+        return 1.0
+    alpha = 1.0 - do / de
+    return round(alpha, 4)
+
+
+def label_irr_subset(
+    client: Any,
+    sessions: list[dict[str, Any]],
+    primary_labeler: str = "deepseek-chat",
+    second_labeler: str = "kimi-k3",
+    output_path: Path | None = None,
+) -> dict[str, Any]:
+    """用第二标注者(Kimi-K3)对子集二次标注,计算与主标注(DeepSeek)的 Krippendorff α
+
+    流程:
+    1. 对子集样本用主标注模型标注 → labels_a
+    2. 同一批样本用第二标注模型标注 → labels_b
+    3. 对 intent.primary 计算 α(其他字段可扩展)
+
+    注意:DeepSeek 与 Kimi 端点不同,在 Part B 执行时可能需要构造两个
+    不同 endpoint 的 client 分别调用 label_via_teacher。本函数接受单个
+    client 参数以保持简单——若端点隔离无法在一个 client 完成,Part B
+    会拆成两次脚本运行并合并记录(见计划 Task 7 注)。
+    """
+    import json as _json
+
+    labels_a: list[str] = []
+    labels_b: list[str] = []
+    records = []
+
+    for session in sessions:
+        ann_a = label_via_teacher(client, session, model=primary_labeler)
+        ann_b = label_via_teacher(client, session, model=second_labeler)
+        for ta, tb in zip(ann_a, ann_b):
+            labels_a.append(ta.intent_primary)
+            labels_b.append(tb.intent_primary)
+            records.append(
+                {
+                    "session_id": session.get("session_id", "unknown"),
+                    "turn_index": ta.turn_index,
+                    "labeler_a": primary_labeler,
+                    "labeler_b": second_labeler,
+                    "intent_a": ta.intent_primary,
+                    "intent_b": tb.intent_primary,
+                }
+            )
+
+    alpha = compute_krippendorff_alpha(labels_a, labels_b)
+    result = {
+        "n_pairs": len(labels_a),
+        "krippendorff_alpha_intent": alpha,
+        "labeler_a": primary_labeler,
+        "labeler_b": second_labeler,
+        "records": records,
+    }
+
+    if output_path:
+        output_path.parent.mkdir(parents=True, exist_ok=True)
+        output_path.write_text(_json.dumps(result, ensure_ascii=False, indent=2), encoding="utf-8")
+    return result
+
+
+# =========================================================================
 # CLI
 # =========================================================================
 
