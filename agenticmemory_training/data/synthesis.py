@@ -1,14 +1,17 @@
-"""P1-1 数据合成:公开集 + GPT-4 合成
+"""P1-1 数据合成:公开集 + 合成
 
 输出格式(JSONL,每行一个会话):
 {
     "session_id": "syn_001",
-    "source": "public:sharely" | "synthetic:gpt4",
+    "source": "public:sharely" | "synthetic:{model}",
     "turns": [
         {"role": "user", "text": "...", "timestamp": "ISO8601"},
         {"role": "assistant", "text": "...", "timestamp": "ISO8601"}
-    ]
+    ],
+    "metadata": {"teacher": "gpt-4o"}
 }
+
+Note: metadata.teacher 标识合成教师模型，供 P1-2 标注时区分数据来源。
 
 设计要点:
 - 三腿数据源(leg A 公开 / leg B GPT-4 合成 / leg C 内部试用)
@@ -115,7 +118,7 @@ class ConversationTurn:
 @dataclass
 class Conversation:
     session_id: str
-    source: str  # public:sharely | synthetic:kimi-k3 | internal:trial
+    source: str  # public:sharely | synthetic:{model} | internal:trial
     turns: list[ConversationTurn] = field(default_factory=list)
     teacher: str = "gpt-4o"  # 合成教师标识
 
@@ -267,6 +270,10 @@ def synthesize_via_gpt4(
 # ============================================================================
 # 数据集混合(写出 JSONL)
 # ============================================================================
+#
+# 输出格式:每行 JSONL 记录包含 session_id / source / turns / metadata
+#   metadata.teacher: 合成教师标识 (e.g. "gpt-4o", "kimi-k3")
+#   用途:供 P1-2 标注时区分数据来源,无需修改现有消费者
 
 
 def write_conversations(
