@@ -28,3 +28,12 @@
 - ⏳ 腿 B 合成阻塞:需有效 Kimi API key(当前 401 Invalid Authentication)
 - ⏳ P1-2 标注阻塞:需有效 DeepSeek(402 余额不足)+ Kimi(401)key
 - ⏳ PoC-2 vLLM / P1-4 训练阻塞:无 GPU 环境,peft/transformers/vllm 未安装
+
+## 环境就绪检查工具(2026-09-01)
+- 新增 `scripts/check_env.py` — 一键验证 4 类前置条件:
+  1. API key 有效性(Kimi/DeepSeek,实际生成接口探测——暴露 401/402 而非误报连通)
+  2. 计算资源(GPU nvidia-smi / 内存 vs 模型 fp32/bf16 需求)
+  3. Python 依赖(transformers/torch/peft/vllm/bitsandbytes)
+  4. 模型可下载性(Qwen3.5-0.8B 首选 + Qwen3.5-1.5B fallback)
+- 用法: `python3 scripts/check_env.py [--json]`
+- 退出码: 0=就绪 / 1=部分 / 2=严重缺失
