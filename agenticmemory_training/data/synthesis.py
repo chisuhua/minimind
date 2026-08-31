@@ -115,8 +115,9 @@ class ConversationTurn:
 @dataclass
 class Conversation:
     session_id: str
-    source: str  # public:sharely | synthetic:gpt4 | internal:trial
+    source: str  # public:sharely | synthetic:kimi-k3 | internal:trial
     turns: list[ConversationTurn] = field(default_factory=list)
+    teacher: str = "gpt-4o"  # 合成教师标识
 
     def to_jsonl_record(self) -> dict[str, Any]:
         return {
@@ -126,6 +127,7 @@ class Conversation:
                 {"role": t.role, "text": t.text, "timestamp": t.timestamp}
                 for t in self.turns
             ],
+            "metadata": {"teacher": self.teacher},
         }
 
 
@@ -253,8 +255,9 @@ def synthesize_via_gpt4(
             ]
             yield Conversation(
                 session_id=f"syn_{i:04d}",
-                source=f"synthetic:gpt4:{model}",
+                source=f"synthetic:{model}",
                 turns=turns,
+                teacher=model,
             )
         except Exception as e:
             print(f"[synthesis] 跳过第 {i} 条:{type(e).__name__}: {e}")
