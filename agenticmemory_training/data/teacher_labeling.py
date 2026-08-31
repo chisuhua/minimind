@@ -404,7 +404,7 @@ def main() -> None:
     print("注意:此脚本为骨架,实际执行需要:")
     print(f"  1. 准备 conversations.jsonl(P1-1 产出)放在 {args.input}")
     print("  2. 设置 DEEPSEEK_API_KEY 或 OPENAI_API_KEY 环境变量")
-    print(f"  3. 取消 main() 末尾 raise,启用实际标注逻辑")
+    print("  3. 取消 main() 末尾 raise,启用实际标注逻辑")
 
 
 if __name__ == "__main__":
