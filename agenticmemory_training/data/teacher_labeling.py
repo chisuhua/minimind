@@ -302,7 +302,8 @@ def compute_krippendorff_alpha(
 
 
 def label_irr_subset(
-    client: Any,
+    client_a: Any,
+    client_b: Any,
     sessions: list[dict[str, Any]],
     primary_labeler: str = "deepseek-chat",
     second_labeler: str = "kimi-k3",
@@ -311,24 +312,41 @@ def label_irr_subset(
     """用第二标注者(Kimi-K3)对子集二次标注,计算与主标注(DeepSeek)的 Krippendorff α
 
     流程:
-    1. 对子集样本用主标注模型标注 → labels_a
-    2. 同一批样本用第二标注模型标注 → labels_b
-    3. 对 intent.primary 计算 α(其他字段可扩展)
+    1. 用 client_a(DeepSeek 端点)标注 → labels_a
+    2. 用 client_b(Kimi 端点)标注 → labels_b
+    3. 对 intent.primary 计算 α
 
-    注意:DeepSeek 与 Kimi 端点不同,在 Part B 执行时可能需要构造两个
-    不同 endpoint 的 client 分别调用 label_via_teacher。本函数接受单个
-    client 参数以保持简单——若端点隔离无法在一个 client 完成,Part B
-    会拆成两次脚本运行并合并记录(见计划 Task 7 注)。
+    client_a / client_b 需分别指向各自提供商的 OpenAI 兼容端点
+    (如 base_url=https://api.deepseek.com/v1 vs https://api.moonshot.cn/v1)。
     """
     import json as _json
+    import warnings as _warnings
+
+    if not sessions:
+        return {
+            "n_pairs": 0,
+            "krippendorff_alpha_intent": None,
+            "labeler_a": primary_labeler,
+            "labeler_b": second_labeler,
+            "records": [],
+            "skipped_unpaired_turns": 0,
+            "empty_input": True,
+        }
 
     labels_a: list[str] = []
     labels_b: list[str] = []
     records = []
+    total_skipped = 0
 
     for session in sessions:
-        ann_a = label_via_teacher(client, session, model=primary_labeler)
-        ann_b = label_via_teacher(client, session, model=second_labeler)
+        ann_a = label_via_teacher(client_a, session, model=primary_labeler)
+        ann_b = label_via_teacher(client_b, session, model=second_labeler)
+        if len(ann_a) != len(ann_b):
+            _warnings.warn(
+                f"session {session.get('session_id', 'unknown')} 两次标注长度不一致 "
+                f"({len(ann_a)} vs {len(ann_b)}),按较短者截断"
+            )
+            total_skipped += abs(len(ann_a) - len(ann_b))
         for ta, tb in zip(ann_a, ann_b):
             labels_a.append(ta.intent_primary)
             labels_b.append(tb.intent_primary)
@@ -350,6 +368,7 @@ def label_irr_subset(
         "labeler_a": primary_labeler,
         "labeler_b": second_labeler,
         "records": records,
+        "skipped_unpaired_turns": total_skipped,
     }
 
     if output_path:
