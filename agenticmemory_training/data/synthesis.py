@@ -65,6 +65,16 @@ PUBLIC_DATASET_REGISTRY: dict[str, dict[str, Any]] = {
         "priority": 3,
         "notes": "通用对话,需关键词过滤(代码项目相关)",
     },
+    "ultrachat": {
+        "name": "HuggingFaceH4/ultrachat_200k",
+        "url": "https://huggingface.co/datasets/HuggingFaceH4/ultrachat_200k",
+        "format": "jsonl",  # raw parquet must be pre-converted to jsonl (messages array per line)
+        "domain": "general_chat_multi_turn",
+        "expected_count": "200K+ sessions",
+        "license": "cc-by-nc-4.0 (需核实)",
+        "priority": 0,
+        "notes": "多轮助手对话(Open H4)。P1-1 腿A 实际使用源(SHARELY 不可达/lmsys gated 时)。原始 parquet 需转 jsonl,每行一条 record,含 messages 数组。",
+    },
 }
 
 
@@ -178,15 +188,23 @@ def load_public_dataset(name: str, path: Path, limit: int | None = None) -> Iter
 def _public_record_to_conversation(record: dict[str, Any], dataset_name: str) -> Conversation:
     """将公开集原始记录转换为 Conversation
 
-    注意:不同数据集 schema 不同,实际实现时需要按数据集适配。
-    本函数仅提供框架,具体字段映射待 P1-1 实际加载时补充。
+    支持多种格式的字段映射:
+    - session_id: session_id > id > prompt_id > 内部 ID
+    - turns_data: turns > conversation > messages
+    - turn text: text > value > content
+    - turn role: role > from > "user"
     """
-    session_id = record.get("session_id") or record.get("id") or f"{dataset_name}_{id(record)}"
-    turns_data = record.get("turns") or record.get("conversation") or []
+    session_id = (
+        record.get("session_id")
+        or record.get("id")
+        or record.get("prompt_id")
+        or f"{dataset_name}_{id(record)}"
+    )
+    turns_data = record.get("turns") or record.get("conversation") or record.get("messages") or []
     turns = [
         ConversationTurn(
             role=t.get("role") or t.get("from") or "user",
-            text=t.get("text") or t.get("value") or "",
+            text=t.get("text") or t.get("value") or t.get("content") or "",
             timestamp=t.get("timestamp") or "",
         )
         for t in turns_data
