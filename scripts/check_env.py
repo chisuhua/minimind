@@ -316,6 +316,10 @@ def main() -> None:
         import json
 
         print(json.dumps(report.to_dict(), ensure_ascii=False, indent=2))
+        # huggingface_hub 会遗留非守护线程,阻止进程正常退出。
+        # 强制刷新 stdout 后立即退出,避免调用方(脚本/CI)等待或超时。
+        sys.stdout.flush()
+        os._exit(report.exit_code)
     else:
         print("=" * 60)
         print("P1 最小闭环实验 — 环境就绪检查")
