@@ -109,6 +109,8 @@ def compute_random_label_f1(
 
 
 def main() -> None:
+    import sys
+
     parser = argparse.ArgumentParser(description="P1-4-pre random-label 对照 F1")
     parser.add_argument("--base-model", default="Qwen/Qwen3.5-0.8B")
     parser.add_argument("--adapter-dir", type=Path, default=Path("runs/lora_v0"))
@@ -117,6 +119,10 @@ def main() -> None:
     parser.add_argument("--seed", type=int, default=42)
     parser.add_argument("--batch-size", type=int, default=4)
     args = parser.parse_args()
+
+    if not args.dev_jsonl.exists():
+        print(f"错误:dev-jsonl 文件不存在 {args.dev_jsonl}", file=sys.stderr)
+        raise SystemExit(2)
 
     samples = []
     with open(args.dev_jsonl, encoding="utf-8") as f:
