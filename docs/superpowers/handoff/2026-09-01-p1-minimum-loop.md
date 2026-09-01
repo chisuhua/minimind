@@ -52,7 +52,8 @@
 | **Kimi API key 无效** | `scripts/check_env.py`: HTTP 401 Invalid Authentication | 有效 `KIMI_API_KEY`(Moonshot 平台生成新 key) |
 | **DeepSeek API 余额不足** | `scripts/check_env.py`: HTTP 402 Insufficient Balance | DeepSeek 平台充值或换有余额的 key |
 | **无 GPU** | `nvidia-smi: command not found` | NVIDIA GPU ≥8GB(或含 GPU 的远程环境) |
-| **内存不足** | 可用 ~2.1GB < Qwen3.5-0.8B fp32 需求 3.2GB | 更多 RAM 或 bitsandbytes(int8,需安装) + 或换更小模型 |
+| **内存不足** | 可用 ~3.14GB(会话中动态变化);Qwen3.5-0.8B fp32 需 3.2GB + 加载开销,临界/几乎必然 OOM | 更多 RAM 或 bitsandbytes(int8,需安装) + 或换更小模型 |
+| **CPU 加载 Qwen3.5-0.8B 不可行** | 实测尝试:3.14GB 可用内存下 fp32 CPU 加载 0.8B 参数(需求 3.2GB)刚到 0% 余量,加 tokenizer/加载开销几乎必触发 OOM 或系统 OOM Killer | 同上(此为内存不足的子项) |
 
 ### 3.1 发现的替代 API 路径(供恢复时决策,非自主执行)
 
