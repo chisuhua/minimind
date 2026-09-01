@@ -1,14 +1,15 @@
 """验证 data_prep / evaluation 的 CLI main() 接线(真实执行而非 stub)"""
 import json
+import subprocess
 import sys
 import tempfile
 import unittest
 from pathlib import Path
 
-REPO = Path(__file__).resolve().parents[1]
+REPO = Path(__file__).resolve().parents[2]
 
 
-def _make_annotations(n_sessions: int = 3, turns_per_session: int = 2) -> list[dict]:
+def _write_annotations(path: Path, n_sessions: int = 3, turns_per_session: int = 2) -> None:
     anns = []
     for s in range(n_sessions):
         for t in range(turns_per_session):
@@ -23,85 +24,65 @@ def _make_annotations(n_sessions: int = 3, turns_per_session: int = 2) -> list[d
                 "current_topic": {"value": f"topic_{s}"},
                 "session_facts": [],
             })
-    return anns
+    path.write_text(
+        "\n".join(json.dumps(a, ensure_ascii=False) for a in anns) + "\n",
+        encoding="utf-8",
+    )
 
 
 class TestDataPrepMain(unittest.TestCase):
-    """data_prep.main() 应真实切分 train/dev"""
+    """python -m ...data_prep 应真实执行 main() 并切分 train/dev"""
 
     def test_data_prep_writes_train_dev(self):
-        sys.path.insert(0, str(REPO))
-        from agenticmemory_training.training.data_prep import (
-            group_by_session,
-            build_training_samples,
-            split_train_dev,
-        )
         with tempfile.TemporaryDirectory() as td:
             td = Path(td)
             ann_path = td / "session_extract.jsonl"
-            anns = _make_annotations()
-            ann_path.write_text(
-                "\n".join(json.dumps(a, ensure_ascii=False) for a in anns) + "\n",
-                encoding="utf-8",
-            )
+            _write_annotations(ann_path)
             train_p = td / "train.jsonl"
             dev_p = td / "dev.jsonl"
 
-            annotations = []
-            with ann_path.open(encoding="utf-8") as f:
-                for line in f:
-                    if line.strip():
-                        annotations.append(json.loads(line))
+            proc = subprocess.run(
+                [sys.executable, "-m", "agenticmemory_training.training.data_prep",
+                 "--annotations", str(ann_path),
+                 "--output-train", str(train_p),
+                 "--output-dev", str(dev_p),
+                 "--dev-ratio", "0.4"],
+                cwd=REPO, capture_output=True, text=True, timeout=60,
+            )
+            self.assertEqual(proc.returncode, 0, f"stderr={proc.stderr}")
+            self.assertTrue(train_p.exists() and dev_p.exists(), proc.stdout)
 
-            samples = []
-            for _sid, sess_anns in group_by_session(iter(annotations)):
-                samples.extend(build_training_samples(sess_anns, max_context_turns=8))
-
-            train, dev = split_train_dev(samples, dev_ratio=0.4)
-
-            train_p.parent.mkdir(parents=True, exist_ok=True)
-            dev_p.parent.mkdir(parents=True, exist_ok=True)
-            with train_p.open("w", encoding="utf-8") as f:
-                for s in train:
-                    f.write(json.dumps(s, ensure_ascii=False) + "\n")
-            with dev_p.open("w", encoding="utf-8") as f:
-                for s in dev:
-                    f.write(json.dumps(s, ensure_ascii=False) + "\n")
-
-            self.assertTrue(train_p.exists() and dev_p.exists())
             train_sids = {json.loads(line)["session_id"] for line in train_p.read_text(encoding="utf-8").splitlines() if line.strip()}
             dev_sids = {json.loads(line)["session_id"] for line in dev_p.read_text(encoding="utf-8").splitlines() if line.strip()}
+            self.assertTrue(train_sids, "train 不应为空")
             self.assertTrue(train_sids.isdisjoint(dev_sids), "session 泄漏:同一会话跨 train/dev")
+
+    def test_data_prep_missing_file_exits_2(self):
+        proc = subprocess.run(
+            [sys.executable, "-m", "agenticmemory_training.training.data_prep",
+             "--annotations", "/nonexistent/ann.jsonl"],
+            cwd=REPO, capture_output=True, text=True, timeout=60,
+        )
+        self.assertEqual(proc.returncode, 2)
 
 
 class TestEvaluationMain(unittest.TestCase):
-    """evaluation.main() 应真实写出 findings md"""
+    """python -m ...data.evaluation 应真实执行 main() 并写出 findings md"""
 
     def test_evaluation_writes_findings(self):
-        sys.path.insert(0, str(REPO))
-        from agenticmemory_training.data.evaluation import (
-            load_annotations,
-            evaluate,
-            report_to_markdown,
-        )
         with tempfile.TemporaryDirectory() as td:
             td = Path(td)
             ann_path = td / "session_extract.jsonl"
-            anns = _make_annotations()
-            ann_path.write_text(
-                "\n".join(json.dumps(a, ensure_ascii=False) for a in anns) + "\n",
-                encoding="utf-8",
-            )
+            _write_annotations(ann_path)
             out_md = td / "findings.md"
 
-            annotations = list(load_annotations(ann_path))
-            result = evaluate(annotations)
-            md = report_to_markdown(result)
-
-            out_md.parent.mkdir(parents=True, exist_ok=True)
-            out_md.write_text(md, encoding="utf-8")
-
-            self.assertTrue(out_md.exists())
+            proc = subprocess.run(
+                [sys.executable, "-m", "agenticmemory_training.data.evaluation",
+                 "--input", str(ann_path), "--output", str(out_md)],
+                cwd=REPO, capture_output=True, text=True, timeout=60,
+            )
+            self.assertEqual(proc.returncode, 0, f"stderr={proc.stderr}")
+            self.assertTrue(out_md.exists(), proc.stdout)
             content = out_md.read_text(encoding="utf-8")
             self.assertIn("intent", content)
             self.assertTrue("填充" in content or "fill" in content.lower())
