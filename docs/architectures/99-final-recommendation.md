@@ -2,12 +2,27 @@
 
 > **目的**：将 7 轮迭代（v1 → v4.6 → AGI → 元认知闭环）的所有结论提炼为 MiniMind 项目的可执行路线。
 > **核心问题**：在 MiniMind 这种 64M-198M 极小模型尺寸下，应该走哪条路？
+>
+> ⚠️ **修订 2026-08-30 — 项目重命名 + 基模型决策权威**:
+>
+> **项目名**:本套文档撰写时项目名为 MiniMind,2026-06-13 已重命名为 **AgenticMind**,定位 pivot 到 AgenticDSL 训练。本套文档保留旧名称以保持历史一致性,但当前执行主线见 [`../../README.md`](../../README.md) + [`../../AGENTS.md`](../../AGENTS.md)。
+>
+> **基模型三答案对照**(以 F-01 为决策权威):
+> | 来源 | 推荐基模型 | 文档性质 |
+> |---|---|---|
+> | [`../../README.md`](../../README.md)(项目根)| Qwen2-0.5B | 主线训练链路 |
+> | [`./04b-v4.5-and-v4.6.md`](./04b-v4.5-and-v4.6.md) | Qwen2.5-1.5B | 推理架构路线 |
+> | [`../../AGENTS.md`](../../AGENTS.md) §12.10 F-01 | **待决策**(候选 0.5B / 1.5B / 7B) | **决策权威** |
+>
+> **若 F-01 决策落地为非 1.5B**(例如选定 7B),本文档的一/二节路线需重新评估:Engine-Native Verification 的延迟优势会被大模型延迟基线稀释,Router 选型需重新评估。**本文档结论(诚实收敛、A- 评级)成立的前提是 1.5B Specialist 假设,切换基模型后需重新走 7 轮迭代的工程评估**。
 
 ---
 
 ## 一、一句话最终建议
 
 > **MiniMind 项目应走 v4.5 主路径（1.5B + Engine-Native Verification + Constrained Decoding + 三层 Safety），5 周冲刺可见 KPI，止损条件清晰。** 不要从 v4.5 跳到 v4.6 之外的更复杂方案（如 AGI 异构架构、元认知闭环作为独立大版本）。**真正的下一步是把 v4.6（GraphRAG + Agentic Memory）和元认知闭环作为 v4.5 的可插拔功能增量，按 ROI 分阶段引入**。
+>
+> ⚠️ 前提声明:本结论基于 1.5B Specialist 假设(详见顶部 F-01 对照)。若基模型调整为其他规模,需重新评估延迟/成本/能力基线。
 
 ---
 
@@ -30,17 +45,16 @@ Constrained Decoding
 L2 Output + L3 HITL
 ```
 
-**5 周冲刺**：
+**5 周冲刺执行顺序**：完整表格见 [`04b-v4.5-and-v4.6.md` §1.6](./04b-v4.5-and-v4.6.md)（**唯一真源**）。本节不再逐字复制,避免与 04b 双写产生漂移。
 
-| 周 | 任务 | 交付物 | 决策点 |
-|----|------|-------|--------|
-| W1 | Qwen2.5-1.5B-Instruct 基线评测 + 数据准备 | 评测报告 + 50K Short-CoT SFT 数据 | KPI 基线确认 |
-| W2 | Short-CoT SFT 训练 + MiCoTA 集成 | 训练好的 1.5B Specialist | GSM8K/MATH 准确率 |
-| W3 | Engine-Native Verification 集成 | Python REPL + JSON Schema 模块 | Verify 失败率 < 1% |
-| W4 | Constrained Decoding + LATTS-style 早停 | 推理服务 v0.9 | P50/P99 延迟达标 |
-| W5 | 三层 Safety + 端到端联调 + 灰度 | 生产就绪服务 | 全部 KPI 达标 |
+**关键节点摘要**(完整内容见 04b §1.6):
+- **W1**:Qwen2.5-1.5B-Instruct 基线评测 + 50K Short-CoT SFT 数据准备(KPI 基线确认)
+- **W2**:Short-CoT SFT 训练 + MiCoTA 集成(决策点:GSM8K < 80% 切 3B dense)
+- **W3**:Engine-Native Verification 集成(决策点:Verify 失败率 < 1%)
+- **W4**:Constrained Decoding + LATTS-style 早停(决策点:P50/P99 延迟达标)
+- **W5**:三层 Safety + 端到端联调 + 灰度(决策点:全部 KPI 达标)
 
-**KPI**：
+**KPI**(完整表格见 [`04b-v4.5-and-v4.6.md` §3.1](./04b-v4.5-and-v4.6.md)):
 
 | KPI | 目标 | 测量 |
 |-----|------|------|
@@ -53,12 +67,12 @@ L2 Output + L3 HITL
 | 安全 F1（跨语种）| ≥0.85 | 2000 条多语种 |
 | 工程故障点 | ≤3 | 故障注入测试 |
 
-**Kill Criteria（任一触发，2 周决策窗口）**：
-1. **能力止损**：SFT + MiCoTA 后 MATH < 60%（1.5B 基线不够，**切 3B dense，不是 MoE**）
-2. **工程止损**：Engine Verify P99 失败率 > 5%
-3. **延迟止损**：Constrained Decoding overhead > 30%
-4. **成本止损**：单 query 成本 > $0.0005
-5. **架构止损**：safety 三层跨语种 F1 < 0.80
+**Kill Criteria（任一触发,2 周决策窗口）**(完整见 [`04b-v4.5-and-v4.6.md` §3.3](./04b-v4.5-and-v4.6.md)):
+1. **能力止损**:SFT + MiCoTA 后 MATH < 60%(1.5B 基线不够,**切 3B dense,不是 MoE**)
+2. **工程止损**:Engine Verify P99 失败率 > 5%
+3. **延迟止损**:Constrained Decoding overhead > 30%
+4. **成本止损**:单 query 成本 > $0.0005
+5. **架构止损**:safety 三层跨语种 F1 < 0.80
 
 ### 路线 2：v4.6 增量（可选，6-8 周）
 
@@ -96,10 +110,15 @@ L2 Output + L3 HITL
 - ❌ 跨模态 / 多文件 / 跨语言对齐
 
 **Kill Criteria（v4.6 特定）**：
-- L1 Router 启用率 < 30%（70% 请求根本不该进 v4.6 路径）
-- Domain QA 任务 v4.6 增益 < 15%（vs v4.5）
-- Multi-hop QA hallucination amplification > 5%（vs v4.5）
-- Agent loop 5 步内成功率 < 50%
+
+| # | 条件 | **status (2026-08-30)** |
+|---|------|---------|
+| 1 | L1 Router 启用率 < 30%（70% 请求根本不该进 v4.6 路径） | **pending** |
+| 2 | Domain QA 任务 v4.6 增益 < 15%（vs v4.5） | **pending** |
+| 3 | Multi-hop QA hallucination amplification > 5%（vs v4.5） | **pending** |
+| 4 | Agent loop 5 步内成功率 < 50% | **pending** |
+
+> ⚠️ **修订 2026-08-30**:为与 [`04b-v4.5-and-v4.6.md` §3.3](./04b-v4.5-and-v4.6.md) 对齐,本表加 status 列。**截至 2026-08-30 全部 pending**——v4.6 路线尚未启动(项目 pivot 至 AgenticDSL 后,基模型决策待 F-01)。完整 status 字段约定见 04b §三 顶部。
 
 ### 路线 3：元认知闭环（v4.7，可选，6-12 周）
 
@@ -287,7 +306,20 @@ Pandey et al. 揭示：即使 oracle 检索，1.5B 只能提取 10% 答案。
 
 ## 九、引用与证据库
 
-### 核心 25 篇文献（按主题）
+### 核心 33 篇文献（按主题）
+
+> ✅ **修订 2026-08-30(更新)**:原标题"核心 25 篇"为估算,实际枚举 33 篇,修订为准确计数。**2026 arXiv ID 核验结果**(2026-08-30 通过 https://arxiv.org/ 逐篇核验):
+>
+> | arXiv ID | 实际论文标题 | 引用文档 | 状态 |
+> |---|---|---|---|
+> | [2603.11513](https://arxiv.org/abs/2603.11513) | "Can Small Language Models Use What They Retrieve?"(Sanchit Pandey,2026-03-12 v1) | 00 §4.5 / 06 §2.2 | ✅ **核验通过** |
+> | [2604.01457](https://arxiv.org/abs/2604.01457) | "Wired for Overconfidence"(Tianyi Zhao et al.,2026-04-01 v1,v3 2026-07-27,COLM 2026) | 00 §四 / 06 §四.2 | ✅ **核验通过** |
+> | [2606.00437](https://arxiv.org/abs/2606.00437) | "EST-PRM: Stress-Testing Process Reward Models"(Shihab et al.,2026-05-30 v1) | 04b §五 | ✅ **核验通过** |
+> | [2605.22620](https://arxiv.org/abs/2605.22620) | "Two is better than one: A Collapse-free Multi-Reward RLIF"(Joarder et al.,2026-05-21 v1,含 GDPO+KL-Cov) | 00 §四 / 04b §五 | ✅ **核验通过** |
+> | [2604.21018](https://arxiv.org/abs/2604.21018) | "Adaptive Test-Time Compute Allocation with Evolving In-Context Demonstrations"(Zuo et al.,2026-04-22 v1) | 00 §四 #25 / 99 §九 #25 | ⚠️ **核验通过但误标**:原标"DIPA"为事实性错误 |
+> | [2602.20091](https://arxiv.org/abs/2602.20091) | "How Retrieved Context Shapes Internal Representations in RAG"(Yeh, Li,2026-02-23 v1,v2 2026-04-16) | 00 §四 #22 / 06 §十一 | ✅ **核验通过** |
+>
+> ⚠️ **DIPA 误标修正(2026-08-30)**:原 #25 将 `arXiv 2604.21018` 标注为"DIPA"。**核验发现:该 ID 对应论文标题为 "Adaptive Test-Time Compute Allocation with Evolving In-Context Demonstrations"**(Zuo et al., 2026),**并非 DIPA**。arxiv.org 全字段搜索 "DIPA" 无独立结果——DIPA 可能是 (a) 另一篇论文的内部缩写但 arXiv ID 标注错误,或 (b) 完全虚构的引用名。**修订**:将 #25 改为正确标题。**此修正对应本套文档教训 4——v3/v4 各有 6 项事实性错误,本次清除其中 1 项**。
 
 #### PRM / Process Reward
 1. Math-Shepherd (arXiv 2312.08935)
@@ -328,7 +360,7 @@ Pandey et al. 揭示：即使 oracle 检索，1.5B 只能提取 10% 答案。
 24. How Retrieved Context Shapes Internal Representations (arXiv 2602.20091)
 
 #### Training-free TTS
-25. DIPA (arXiv 2604.21018)
+25. Adaptive Test-Time Compute Allocation with Evolving In-Context Demonstrations (arXiv 2604.21018; **⚠️ 修订 2026-08-30:原标"DIPA"为事实性错误,实际论文如本标题**)
 26. LATTS (arXiv 2509.20368)
 27. CATS (OpenReview mXuUomGc0I)
 

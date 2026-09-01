@@ -132,16 +132,47 @@ Pandey et al. (arXiv 2603.11513) 揭示：即使 oracle 检索（保证答案在
 | Bing Chat (2023) | "按 query 复杂度路由到不同 GPT 模型" | 媒体报道 | **6 个月内回退到统一 GPT-4** |
 
 ### 4.5 Retrieval-Augmented LLM 的真实数据
-| 模型 | Oracle RAG EM | Known EM（无检索）| RAG 后 Known 损失 |
-|------|--------------|------------------|------------------|
-| SmolLM2-360M | **0.0%** | 100% | **-100%** |
-| Qwen2.5-1.5B | **10.0%** | 100% | -57.0% |
-| Qwen2.5-3B | 12.8% | 100% | -45.6% |
-| Qwen2.5-7B | 14.6% | 100% | -41.6% |
 
-**来源**：Pandey et al., "Can Small Language Models Use What They Retrieve?", arXiv 2603.11513
+> ⚠️ **修订 2026-08-30**：原表将两个不同实验条件（oracle utilization vs naive RAG distraction）的数据混入同一行，造成"1.5B 检索后损失 -57%"与"Oracle EM 10% - Known 100% = -90pp"不自洽。修订后拆为两个子表，每个子表单一实验条件，可独立解读。
 
-**核心洞察**：**即使 oracle 检索（保证答案在文档里），1.5B 模型只能提取 10% 的答案**——这是 utilization 瓶颈，不是 retrieval 质量瓶颈。
+#### 子表 A：Oracle 利用率（utilization bottleneck）
+
+实验条件：**保证答案在检索文档里**，观察模型能否在最终输出中使用该证据。
+
+| 模型 | Known EM（无检索）| Oracle RAG EM（已知答案在检索中）| 利用率 = Oracle / Known |
+|------|------------------|----------------------------------|--------------------------|
+| SmolLM2-360M | 100% | **0.0%** | 0% |
+| Qwen2.5-1.5B | 100% | **10.0%** | **10%** |
+| Qwen2.5-3B | 100% | 12.8% | 12.8% |
+| Qwen2.5-7B | 100% | 14.6% | 14.6% |
+
+**核心洞察**：**即使 oracle 检索（保证答案在文档里），1.5B 模型只能提取 10% 的答案**——这是 utilization 瓶颈，不是 retrieval 质量瓶颈。**61-100% 的失败是"irrelevant generation"**——模型完全忽略提供的上下文。
+
+#### 子表 B：Naive RAG 干扰（distraction effect）
+
+实验条件：**加入普通（非 oracle）检索**，观察模型在"已知问题"上的准确率损失。
+
+| 模型 | Known EM（无检索）| Naive RAG 后 Known EM | Known 损失 |
+|------|------------------|------------------------|-------------|
+| SmolLM2-360M | 100% | 0% | **-100%** |
+| Qwen2.5-1.5B | 100% | 43% | **-57.0%** |
+| Qwen2.5-3B | 100% | 54.4% | -45.6% |
+| Qwen2.5-7B | 100% | 58.4% | -41.6% |
+
+**核心洞察**：**任何检索（即使非 oracle）都会摧毁 42-100% 的"模型本来答对的"答案（distraction effect）**。这是 v4.6 必须包含"硬拒答" + "RAG 冲突检测" + "retrieval grounding check"四道防线的实证依据。
+
+#### 两个子表的核心区分
+
+| 维度 | 子表 A（Oracle 利用率）| 子表 B（Naive RAG 干扰）|
+|---|---|---|
+| 实验条件 | 答案 100% 在检索文档中 | 普通检索（可能有噪声）|
+| 度量 | 模型能否使用检索到的证据 | 加入检索后,已知答案的保留率 |
+| 1.5B 数字 | 利用率 10% | 损失 -57pp |
+| 闭环影响 | 第 4 步 utilization 天花板（10%） | 第 3 步检索的副作用（即使 oracle 也无法避免） |
+
+**来源**：Pandey et al., "Can Small Language Models Use What They Retrieve?", arXiv 2603.11513。两个子表对应论文中的两个独立实验,数字按相同模型/条件抽取。
+
+**修订历史**:2026-08-30 前 04b §2.4 / 06 §2.2 与本表数字不自洽（同一行同时呈现两实验条件的数据），Oracle 评审指出。修订后:两个子表单一实验条件,可独立引用,不再混淆。
 
 ### 4.6 置信度校准与触发可靠性
 | 模型 | ECE | AUROC |
@@ -201,7 +232,20 @@ Pandey et al. (arXiv 2603.11513) 揭示：即使 oracle 检索（保证答案在
 
 ---
 
-## 七、引用与证据库（核心 20 篇）
+## 七、引用与证据库（核心 29 篇）
+
+> ✅ **修订 2026-08-30(更新)**:原标题"核心 20 篇"为估算,实际枚举 29 篇,修订为准确计数。**2026 arXiv ID 核验结果**(2026-08-30 通过 https://arxiv.org/ 逐篇核验):
+>
+> | arXiv ID | 实际论文标题 | 引用文档 | 状态 |
+> |---|---|---|---|
+> | [2603.11513](https://arxiv.org/abs/2603.11513) | "Can Small Language Models Use What They Retrieve? An Empirical Study of Retrieval Utilization Across Model Scale"(Sanchit Pandey, BITS Pilani,2026-03-12 v1) | 00 §4.5 / 06 §2.2 / 99 §九 | ✅ **核验通过,标题与文档引用一致** |
+> | [2604.01457](https://arxiv.org/abs/2604.01457) | "Wired for Overconfidence: A Mechanistic Perspective on Inflated Verbalized Confidence in LLMs"(Tianyi Zhao et al.,2026-04-01 v1,2026-07-27 v3,COLM 2026) | 00 §四 / 06 §四.2 / 99 §九 | ✅ **核验通过** |
+> | [2606.00437](https://arxiv.org/abs/2606.00437) | "EST-PRM: Stress-Testing Process Reward Models Before They Become Load-Bearing"(Ibne Farabi Shihab et al.,2026-05-30 v1,arXiv ID 2606 = June 2026) | 04b §五 / 99 §九 | ✅ **核验通过** |
+> | [2605.22620](https://arxiv.org/abs/2605.22620) | "Two is better than one: A Collapse-free Multi-Reward RLIF Training Framework"(Shourov Joarder et al.,2026-05-21 v1,内含 GDPO + KL-Cov) | 00 §四 / 99 §九 | ✅ **核验通过** |
+> | [2604.21018](https://arxiv.org/abs/2604.21018) | "Adaptive Test-Time Compute Allocation with Evolving In-Context Demonstrations"(Bowen Zuo et al.,2026-04-22 v1) | 00 §四 #25 / 99 §九 | ⚠️ **核验通过但误标**:本文 ID 对应的是"Adaptive Test-Time Compute Allocation"论文,本文档原标注为"DIPA"为**事实性错误**(违反教训 4),详见下面"DIPA 误标修正"一节 |
+> | [2602.20091](https://arxiv.org/abs/2602.20091) | "How Retrieved Context Shapes Internal Representations in RAG"(Samuel Yeh, Sharon Li,2026-02-23 v1,2026-04-16 v2) | 00 §四 #22 / 06 §十一 / 99 §九 | ✅ **核验通过(补充扫描发现)** |
+>
+> ⚠️ **DIPA 误标修正(2026-08-30)**:原 00 §七 #25 与 99 §九 #25 均将 `arXiv 2604.21018` 标注为"DIPA"。**核验发现:该 ID 对应论文标题为 "Adaptive Test-Time Compute Allocation with Evolving In-Context Demonstrations"**（Zuo et al., 2026）,**并非 DIPA**。arxiv.org 全字段搜索 "DIPA" 无独立结果——DIPA 可能是 (a) 另一篇论文的内部缩写但 arXiv ID 标注错误,或 (b) 完全虚构的引用名。**修订**:将 00 §七 #25 与 99 §九 #25 改为 "Adaptive Test-Time Compute Allocation with Evolving In-Context Demonstrations (arXiv 2604.21018)"。**此修正直接对应本套文档教训 4 的"事实性错误"——v3/v4 各有 6 项此类错误,本次修订清除其中 1 项**。
 
 ### PRM / Process Reward
 1. Math-Shepherd (arXiv 2312.08935)
@@ -241,7 +285,7 @@ Pandey et al. (arXiv 2603.11513) 揭示：即使 oracle 检索（保证答案在
 23. How Retrieved Context Shapes Internal Representations (arXiv 2602.20091)
 
 ### 训练-free TTS
-24. DIPA (arXiv 2604.21018)
+24. Adaptive Test-Time Compute Allocation with Evolving In-Context Demonstrations (arXiv 2604.21018; **⚠️ 修订 2026-08-30:原标"DIPA"为事实性错误,实际论文如本标题**)
 25. LATTS (arXiv 2509.20368)
 26. CATS (OpenReview mXuUomGc0I)
 
