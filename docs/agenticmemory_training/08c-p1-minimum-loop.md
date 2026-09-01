@@ -1,8 +1,8 @@
 # P1 最小闭环实验 — 架构与执行指南
 
 > **文档 ID**: MEMDATA-008C-P1-LOOP
-> **生成日期**: 2026-08-25
-> **状态**: 草案 v0.1(随骨架产出,由 CM-004-P1-GUIDE 迁移 + 合并架构节)
+> **生成日期**: 2026-08-25(初版);2026-09-01(本次会话进展同步)
+> **状态**: v0.2 — CLI 接线 + ultrachat 适配 + check_env.py;Part B 执行路径代码侧 100% 就绪;阻塞项见 §11
 > **配套代码**:
 > - `agenticmemory_training/`(训练侧:data / training 模块)
 > - `agenticmind/extraction/`(共享契约:schemas / validator / privacy)
@@ -12,6 +12,7 @@
 > - `08b-seed-schema-fusion.md` — Schema 融合边界
 > - `../agenticmind/context-management/mvp-schema.md` — 13 字段人工 schema 单一真源
 > - `../agenticmind/context-management/architecture.md` — 运行时编排架构(与本文档解耦)
+> - `../../superpowers/handoff/2026-09-01-p1-minimum-loop.md` — 本次会话交接文档(恢复路径+阻塞清单)
 
 ---
 
@@ -134,6 +135,57 @@ export TEACHER_MODEL_PATH="/path/to/Qwen3-0.6B"
 # 或
 export TEACHER_MODEL_PATH="Qwen/Qwen2.5-0.5B"  # HF 自动下载
 ```
+
+---
+
+## 2.5 本次会话进展(2026-09-01 同步,衔接 v0.2)
+
+> **本节为本次会话新完成项的状态同步**——非重新设计。详细背景见 `../../superpowers/handoff/2026-09-01-p1-minimum-loop.md`。
+
+### 2.5.1 代码侧已完成(已提交 master,18 commits)
+
+| 改进 | commit | 影响 |
+|---|---|---|
+| 接线 `data_prep.py` + `evaluation.py` CLI main() | `52f014f` | §3.3 / §5.3 CLI 现在真正可调,不再只打印"stub" |
+| subprocess CLI 集成测试(3 个) | `54baedb` | `test_cli_integration.py` 真正通过 `python -m` 调用,验证 main() 端到端 |
+| `check_env.py` 环境就绪检查 | `f8fefd5` / `7f3e4bb` | §2 环境检查可一键验证(API/GPU/内存/依赖/模型) |
+| 注册 ultrachat 公开集适配器 | `ae529f9` | §3.1 实际可用的"非 gated + 非中国 git 仓库"替代 SHARELY/lmsys |
+| 100 条 ultrachat 多轮对话 | `3b30131` / `30d1b87` | §3.1 腿 A 数据已就绪(3-13 turns,median 5) |
+| 其他 Part A 修复(44 tests) | `620a0ca`~`7f3e4bb` | 详见 git log |
+
+### 2.5.2 47 tests 全绿 + ruff 干净
+
+```
+python3 -m unittest agenticmind.tests.test_extraction \
+    agenticmemory_training.tests.test_synthesis_teacher \
+    agenticmemory_training.tests.test_eval_zero_shot \
+    agenticmemory_training.tests.test_eval_random_label \
+    agenticmemory_training.tests.test_teacher_irr \
+    agenticmemory_training.tests.test_public_dataset_ultrachat \
+    agenticmemory_training.tests.test_cli_integration
+# Ran 47 tests, OK
+```
+
+### 2.5.3 阻塞项(需用户提供资源)
+
+| 阻塞 | 探测 | 需用户 |
+|---|---|---|
+| Kimi API 401 Invalid Authentication | `check_env.py` chat/completions 探测 | 有效 `KIMI_API_KEY` |
+| DeepSeek API 402 Insufficient Balance | `check_env.py` chat/completions 探测 | 充值或换有余额 key |
+| 无 GPU | `nvidia-smi: command not found` | NVIDIA GPU ≥8GB |
+| 内存 2.1GB < 模型 3.2GB(fp32) | `check_env.py` 内存检查 | 更大 RAM 或换小模型 / bitsandbytes |
+
+**恢复命令**:`python3 scripts/check_env.py` 应返回 exit 0(全绿)。
+
+### 2.5.4 §3.1 数据源替代说明
+
+原计划 SHARELY / MultiWOZ / LMSYS-Chat-1M 不可用:
+- SHARELY:git ls-remote 超时 (exit 124)
+- MultiWOZ 2.4:同上
+- LMSYS-Chat-1M:HF gated (403)
+- **替代**:`HuggingFaceH4/ultrachat_200k` (经 hf-mirror) — 通用多轮对话,**非代码项目领域**,但作为 P1 验证腿 A 数据来源可用
+
+**未来如需代码项目对话**:等 SHARELY 公开数据集实际可用,或自行爬取 GitHub Issues/PRs 构造(超出本计划范围)。
 
 ---
 
