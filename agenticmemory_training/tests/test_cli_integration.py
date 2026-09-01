@@ -66,6 +66,30 @@ class TestDataPrepMain(unittest.TestCase):
         self.assertEqual(proc.returncode, 2)
 
 
+class TestEvalZeroShotMain(unittest.TestCase):
+    """python -m ...eval_zero_shot 缺 dev-jsonl 应 exit 2(非 traceback)"""
+
+    def test_eval_zero_shot_missing_file_exits_2(self):
+        proc = subprocess.run(
+            [sys.executable, "-m", "agenticmemory_training.training.eval_zero_shot",
+             "--dev-jsonl", "/nonexistent/dev.jsonl"],
+            cwd=REPO, capture_output=True, text=True, timeout=60,
+        )
+        self.assertEqual(proc.returncode, 2)
+
+
+class TestEvalRandomLabelMain(unittest.TestCase):
+    """python -m ...eval_random_label 缺 dev-jsonl 应 exit 2(非 traceback)"""
+
+    def test_eval_random_label_missing_file_exits_2(self):
+        proc = subprocess.run(
+            [sys.executable, "-m", "agenticmemory_training.training.eval_random_label",
+             "--dev-jsonl", "/nonexistent/dev.jsonl"],
+            cwd=REPO, capture_output=True, text=True, timeout=60,
+        )
+        self.assertEqual(proc.returncode, 2)
+
+
 class TestEvaluationMain(unittest.TestCase):
     """python -m ...data.evaluation 应真实执行 main() 并写出 findings md"""
 
