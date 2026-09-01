@@ -11,7 +11,7 @@
 
 ## 1. 一句话状态
 
-**P1 最小闭环实验的代码改造(Part A)已全部完成并合并 master(44 tests OK);实验执行(Part B)推进到 P1-1 腿 A 完成(100 条公开集),因外部资源缺失暂停。**
+**P1 最小闭环实验的代码改造(Part A + CLI 接线)已全部完成并合并 master(49 tests OK);实验执行(Part B)推进到 P1-1 腿 A 完成(100 条公开集),因外部资源缺失暂停。**
 
 ## 2. 已完成工作(勿重复)
 
@@ -23,7 +23,7 @@
   - 新增 F-06(架构与训练解耦 + 记忆优先)
   - 新增 §6.5 四原则
 
-### 2.2 Part A 代码修复(commits `620a0ca` → `a06ddcf`, 44 tests OK)
+### 2.2 Part A 代码修复(commits `620a0ca` → `d45070b`, 49 tests OK)
 
 | 改动 | 文件 | 说明 |
 |---|---|---|
@@ -33,7 +33,7 @@
 | IRR 支持 | `agenticmemory_training/data/teacher_labeling.py` | `compute_krippendorff_alpha()`(NLTK coincidence)+ `label_irr_subset(client_a, client_b, ...)`(双 client,长度校验,empty 保护) |
 | ultrachat 公开集适配 | `agenticmemory_training/data/synthesis.py` + test | `PUBLIC_DATASET_REGISTRY` 注册 + `_public_record_to_conversation` 支持 messages/content/prompt_id |
 
-**测试文件**(全部 class-based, 44 tests): `agenticmind/tests/test_extraction`(33) + `test_synthesis_teacher`(2) + `test_eval_zero_shot`(2) + `test_eval_random_label`(1) + `test_teacher_irr`(3) + `test_public_dataset_ultrachat`(3)
+**测试文件**(全部 class-based, 49 tests): `agenticmind/tests/test_extraction`(33) + `test_synthesis_teacher`(2) + `test_eval_zero_shot`(2) + `test_eval_random_label`(1) + `test_teacher_irr`(3) + `test_public_dataset_ultrachat`(3) + `test_cli_integration`(5, 含 data_prep/evaluation/eval_zero_shot/eval_random_label 的 CLI 缺文件退出码)
 
 ### 2.3 Part B 已推进部分(commits `21fe57d` → `f8fefd5`)
 

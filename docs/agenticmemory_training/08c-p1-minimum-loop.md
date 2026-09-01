@@ -147,13 +147,13 @@ export TEACHER_MODEL_PATH="Qwen/Qwen2.5-0.5B"  # HF 自动下载
 | 改进 | commit | 影响 |
 |---|---|---|
 | 接线 `data_prep.py` + `evaluation.py` CLI main() | `52f014f` | §3.3 / §5.3 CLI 现在真正可调,不再只打印"stub" |
-| subprocess CLI 集成测试(3 个) | `54baedb` | `test_cli_integration.py` 真正通过 `python -m` 调用,验证 main() 端到端 |
+| subprocess CLI 集成测试(5 个) | `54baedb` / `d45070b` | `test_cli_integration.py` 真正通过 `python -m` 调用,验证 4 个 CLI 入口 + 缺文件 exit 2 |
 | `check_env.py` 环境就绪检查 | `f8fefd5` / `7f3e4bb` | §2 环境检查可一键验证(API/GPU/内存/依赖/模型) |
 | 注册 ultrachat 公开集适配器 | `ae529f9` | §3.1 实际可用的"非 gated + 非中国 git 仓库"替代 SHARELY/lmsys |
 | 100 条 ultrachat 多轮对话 | `3b30131` / `30d1b87` | §3.1 腿 A 数据已就绪(3-13 turns,median 5) |
-| 其他 Part A 修复(44 tests) | `620a0ca`~`7f3e4bb` | 详见 git log |
+| 其他 Part A 修复(44→49 tests) | `620a0ca`~`d45070b` | 详见 git log |
 
-### 2.5.2 47 tests 全绿 + ruff 干净
+### 2.5.2 49 tests 全绿 + ruff 干净
 
 ```
 python3 -m unittest agenticmind.tests.test_extraction \
@@ -163,7 +163,7 @@ python3 -m unittest agenticmind.tests.test_extraction \
     agenticmemory_training.tests.test_teacher_irr \
     agenticmemory_training.tests.test_public_dataset_ultrachat \
     agenticmemory_training.tests.test_cli_integration
-# Ran 47 tests, OK
+# Ran 49 tests, OK
 ```
 
 ### 2.5.3 阻塞项(需用户提供资源)
